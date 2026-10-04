@@ -3,17 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Absorto — Proof-of-Work Pomodoro</title>
+  <title>Absorto · Proof-of-Work Pomodoro</title>
   <meta name="description" content="A native macOS study timer that knows when you drift. Vision tracks focus. Gemini checks off-task tabs. Earn your break with a photo quiz." />
-  <meta property="og:title" content="Absorto — Proof-of-Work Pomodoro" />
+  <meta property="og:title" content="Absorto · Proof-of-Work Pomodoro" />
   <meta property="og:description" content="Focus or forfeit. Absorto watches attention on-device and unlocks breaks only after you prove you studied." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
+  <canvas id="particles" aria-hidden="true"></canvas>
 
   <header class="nav">
     <a class="brand" href="#top">
@@ -31,7 +28,7 @@
       <p class="eyebrow">macOS · Proof-of-Work Pomodoro</p>
       <h1>
         <span class="brand-hero">Absorto</span>
-        <span class="hero-line">Focus — or forfeit the break.</span>
+        <span class="hero-line">Focus, or forfeit the break.</span>
       </h1>
       <p class="lede">
         A native study timer that can tell a focused session from a distracted one.
@@ -50,27 +47,56 @@
           View on GitHub
         </a>
       </div>
-      <p class="cta-note">Free · Camera required · Gemini API key optional for tab checks &amp; quizzes</p>
+      <p class="cta-note">Free · Camera required · Gemini API key optional for tab checks and quizzes</p>
 
       <div class="stage" aria-hidden="true">
-        <div class="stage-glow"></div>
         <div class="window">
           <div class="window-bar">
             <span></span><span></span><span></span>
             <p>Absorto · Studying</p>
           </div>
           <div class="window-body">
-            <p class="window-topic">Calculus — derivatives</p>
-            <div class="ball-wrap">
-              <div class="ball-ring"></div>
-              <div class="ball"></div>
+            <p class="window-topic">Calculus · derivatives</p>
+
+            <div class="ball-stage">
+              <svg class="ball-svg" viewBox="0 0 270 270" width="270" height="270">
+                <defs>
+                  <radialGradient id="ballWhite" cx="50%" cy="45%" r="55%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="100%" stop-color="#ebebeb" />
+                  </radialGradient>
+                  <radialGradient id="ballRed" cx="50%" cy="40%" r="60%">
+                    <stop offset="0%" stop-color="#ff736b" />
+                    <stop offset="100%" stop-color="#d91f29" />
+                  </radialGradient>
+                </defs>
+                <circle class="timer-track" cx="135" cy="135" r="120" />
+                <circle class="timer-progress" cx="135" cy="135" r="120" />
+                <circle class="focus-ring" cx="135" cy="135" r="98" />
+                <circle class="ball-glow" cx="135" cy="135" r="100" />
+                <circle class="ball" id="focus-ball" cx="135" cy="135" r="90" />
+                <circle class="ball-empty" id="ball-empty" cx="135" cy="135" r="90" />
+              </svg>
             </div>
-            <p class="window-status">Focusing · ball 100%</p>
+
+            <p class="window-status" id="status-text">Focusing on: Calculus</p>
+
             <div class="window-metrics">
-              <div><strong>0</strong><span>Drifts</span></div>
-              <div><strong>25m</strong><span>Session</span></div>
-              <div><strong>100%</strong><span>Focus</span></div>
+              <div>
+                <strong id="metric-drifts">0</strong>
+                <span>Drifts</span>
+              </div>
+              <div>
+                <strong id="metric-ball">100%</strong>
+                <span>Ball</span>
+              </div>
+              <div>
+                <strong id="metric-focus">100%</strong>
+                <span>Focus</span>
+              </div>
             </div>
+
+            <p class="window-session">25 min session</p>
           </div>
         </div>
       </div>
@@ -86,7 +112,7 @@
         <li>
           <span class="step-num">01</span>
           <h3>Declare the topic</h3>
-          <p>Tell Absorto what you’re studying. Pick 1, 25, or 50 minutes on the crown ring.</p>
+          <p>Tell Absorto what you are studying. Pick 1, 25, or 50 minutes on the crown ring.</p>
         </li>
         <li>
           <span class="step-num">02</span>
@@ -96,7 +122,7 @@
         <li>
           <span class="step-num">03</span>
           <h3>Tabs get judged</h3>
-          <p>Off-task apps and browser tabs (with Gemini when needed) keep the ball shrinking until you’re back.</p>
+          <p>Off-task apps and browser tabs (with Gemini when needed) keep the ball shrinking until you are back.</p>
         </li>
         <li>
           <span class="step-num">04</span>
@@ -113,11 +139,11 @@
       </article>
       <article>
         <h3>Gemini where it matters</h3>
-        <p>Language judgment for off-task tab titles and the end-of-session photo quiz — not for every camera frame.</p>
+        <p>Language judgment for off-task tab titles and the end-of-session photo quiz, not for every camera frame.</p>
       </article>
       <article>
         <h3>Breaks you earn</h3>
-        <p>Base 10 minutes. −1 per missed question. −1 per confirmed distraction. Floor at 1 minute.</p>
+        <p>Base 10 minutes. Minus 1 per missed question. Minus 1 per confirmed distraction. Floor at 1 minute.</p>
       </article>
     </section>
 
@@ -137,8 +163,10 @@
     <p>Absorto · Proof-of-Work Pomodoro</p>
     <p>
       <a href="https://github.com/diego-carrasco/Absorto">GitHub</a>
-      · Built with Vision + Gemini
+      · Built with Vision and Gemini
     </p>
   </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>

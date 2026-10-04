@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Absorto — Proof-of-Work Pomodoro</title>
+  <meta name="description" content="A native macOS study timer that knows when you drift. Vision tracks focus. Gemini checks off-task tabs. Earn your break with a photo quiz." />
+  <meta property="og:title" content="Absorto — Proof-of-Work Pomodoro" />
+  <meta property="og:description" content="Focus or forfeit. Absorto watches attention on-device and unlocks breaks only after you prove you studied." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      Absorto
+    </a>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#download" class="nav-cta">Download</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">macOS · Proof-of-Work Pomodoro</p>
+      <h1>
+        <span class="brand-hero">Absorto</span>
+        <span class="hero-line">Focus — or forfeit the break.</span>
+      </h1>
+      <p class="lede">
+        A native study timer that can tell a focused session from a distracted one.
+        Vision watches your attention on-device. Gemini catches off-task tabs.
+        Earn your break with a photo quiz.
+      </p>
+      <div class="cta-row" id="download">
+        <a
+          class="btn btn-primary"
+          href="https://github.com/diego-carrasco/Absorto/releases/latest"
+        >
+          Download for Mac
+          <span class="btn-meta">macOS 14+</span>
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/diego-carrasco/Absorto">
+          View on GitHub
+        </a>
+      </div>
+      <p class="cta-note">Free · Camera required · Gemini API key optional for tab checks &amp; quizzes</p>
+
+      <div class="stage" aria-hidden="true">
+        <div class="stage-glow"></div>
+        <div class="window">
+          <div class="window-bar">
+            <span></span><span></span><span></span>
+            <p>Absorto · Studying</p>
+          </div>
+          <div class="window-body">
+            <p class="window-topic">Calculus — derivatives</p>
+            <div class="ball-wrap">
+              <div class="ball-ring"></div>
+              <div class="ball"></div>
+            </div>
+            <p class="window-status">Focusing · ball 100%</p>
+            <div class="window-metrics">
+              <div><strong>0</strong><span>Drifts</span></div>
+              <div><strong>25m</strong><span>Session</span></div>
+              <div><strong>100%</strong><span>Focus</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="how" id="how">
+      <div class="section-head">
+        <h2>How Absorto works</h2>
+        <p>One loop. No dashboards. Prove the work, then take the break.</p>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <span class="step-num">01</span>
+          <h3>Declare the topic</h3>
+          <p>Tell Absorto what you’re studying. Pick 1, 25, or 50 minutes on the crown ring.</p>
+        </li>
+        <li>
+          <span class="step-num">02</span>
+          <h3>Stay with the ball</h3>
+          <p>On-device Vision tracks face, head pose, eyes, and yawns. Drift shrinks the white focus ball.</p>
+        </li>
+        <li>
+          <span class="step-num">03</span>
+          <h3>Tabs get judged</h3>
+          <p>Off-task apps and browser tabs (with Gemini when needed) keep the ball shrinking until you’re back.</p>
+        </li>
+        <li>
+          <span class="step-num">04</span>
+          <h3>Earn the break</h3>
+          <p>Drag in a study photo. Answer 3 quiz questions. Misses and distractions shorten the break.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="pillars">
+      <article>
+        <h3>On-device vision</h3>
+        <p>Head pose, no-face, eyes closed, and yawn detection stay on your Mac. No continuous screen recording.</p>
+      </article>
+      <article>
+        <h3>Gemini where it matters</h3>
+        <p>Language judgment for off-task tab titles and the end-of-session photo quiz — not for every camera frame.</p>
+      </article>
+      <article>
+        <h3>Breaks you earn</h3>
+        <p>Base 10 minutes. −1 per missed question. −1 per confirmed distraction. Floor at 1 minute.</p>
+      </article>
+    </section>
+
+    <section class="final-cta">
+      <h2>Ready to lock in?</h2>
+      <p>Install Absorto, grant Camera, and start a session.</p>
+      <a
+        class="btn btn-primary"
+        href="https://github.com/diego-carrasco/Absorto/releases/latest"
+      >
+        Download Absorto
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    <p>Absorto · Proof-of-Work Pomodoro</p>
+    <p>
+      <a href="https://github.com/diego-carrasco/Absorto">GitHub</a>
+      · Built with Vision + Gemini
+    </p>
+  </footer>
+</body>
+</html>

@@ -14,6 +14,12 @@ Built solo with the Gemini API (MLH: Best Use of Gemini API / Best Solo Project)
 - Optional: Accessibility (for reliable browser tab titles)
 - Gemini API key ([Google AI Studio](https://aistudio.google.com/))
 
+## Website
+
+A simple download landing page lives in [`website/`](website/). Deploy it to Vercel from that folder (or set the Vercel root directory to `website`). The Download button points at GitHub Releases:
+
+`https://github.com/diego-carrasco/Absorto/releases/latest`
+
 ## Setup
 
 1. Copy the example config and add your key (never commit this file):

@@ -1,0 +1,35 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.swiftpm/
+.Build/
+.build/
+Packages/
+Package.resolved
+
+# Secrets — Gemini API key must never be committed
+Config.plist
+Secrets.plist
+**/LocalConfig.swift
+.env
+.env.*
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Archives / uploads
+*.zip
+demo.mp4

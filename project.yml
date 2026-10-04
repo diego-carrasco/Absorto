@@ -1,0 +1,76 @@
+name: Absorto
+options:
+  bundleIdPrefix: com.absorto
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_ALLOWED: "YES"
+    ENABLE_HARDENED_RUNTIME: "YES"
+    ENABLE_TESTABILITY: "YES"
+targets:
+  Absorto:
+    type: application
+    platform: macOS
+    sources:
+      - path: Absorto
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.absorto.pow
+        PRODUCT_NAME: Absorto
+        INFOPLIST_FILE: Absorto/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Absorto/Absorto.entitlements
+        COMBINE_HIDPI_IMAGES: "YES"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        GENERATE_INFOPLIST_FILE: "NO"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Absorto/Info.plist
+      properties:
+        CFBundleName: Absorto
+        CFBundleDisplayName: Absorto
+        CFBundleIdentifier: com.absorto.pow
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "14.0"
+        LSUIElement: true
+        NSPrincipalClass: NSApplication
+        NSCameraUsageDescription: Absorto watches your head position on-device to detect study drift. Frames leave the Mac only when a drift rule fires.
+        NSMicrophoneUsageDescription: Absorto does not record audio; this may be requested by system frameworks.
+        NSScreenCaptureDescription: Absorto captures one screen frame at session start, end, and when drift is confirmed so Gemini can see what you were studying.
+    entitlements:
+      path: Absorto/Absorto.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.device.camera: true
+        com.apple.security.network.client: true
+  AbsortoTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - AbsortoTests
+    dependencies:
+      - target: Absorto
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.absorto.pow.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Absorto.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Absorto"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  Absorto:
+    build:
+      targets:
+        Absorto: all
+        AbsortoTests: [test]
+    test:
+      targets:
+        - AbsortoTests

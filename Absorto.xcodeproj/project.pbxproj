@@ -1,0 +1,549 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0FDDAE7329DEAB1BBF036ECA /* HeadTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 676A650F232E9BE79D1BC7A7 /* HeadTracker.swift */; };
+		294096A4C3FC01DF0C39B99C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F4F03A6E48F4557F2B9D7ACA /* Assets.xcassets */; };
+		2BD3428F892148B77CB6A828 /* SessionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F5F570B9A0219F3532B982 /* SessionViews.swift */; };
+		512E103076117DE87631F69A /* WindowWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E116F93FA9D9CD3FF9EFF1 /* WindowWatcher.swift */; };
+		7178741766682D31B20007F7 /* FloatingBallPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 902D1BEE3BE31EA05813BD59 /* FloatingBallPanel.swift */; };
+		7CCF9F1FB5DBF4C9B1ED946F /* DriftEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D327EA0AACC1B69B34F823 /* DriftEngine.swift */; };
+		8C4608646EBE73F0F3FE44EF /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0F49F364DA236F7A84555B /* Models.swift */; };
+		978CE1A30CBE4E562AED9919 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E2EB374F6A1F097447CE49F /* AppConfig.swift */; };
+		A2C93695A968CE691614C62F /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2907CF7C6FB66F357599F7 /* CameraService.swift */; };
+		A3EC113DD0F69A76396A5A77 /* AbsortoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30819A661F308EE16DBFD88B /* AbsortoApp.swift */; };
+		A76F56EC9E14E20574681588 /* GeminiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634A22E387DADE017185CD1E /* GeminiClient.swift */; };
+		AA7C2967401846AD98FEEE97 /* ScreenCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20C54B5622D04631CAA58F1 /* ScreenCaptureService.swift */; };
+		C5576CD1D8A7465B711E7970 /* FocusBallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1453F6F68C79D70BA7813D2E /* FocusBallView.swift */; };
+		C657A359C2A56B2327E5A1D4 /* SessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DC0ED4E42826564135CB4D /* SessionController.swift */; };
+		D45BBF0CD1DEE152FE5ABEF4 /* DriftEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7B74B805B91FC549E53698 /* DriftEngineTests.swift */; };
+		DFDBDA2D0BA38345060B1B77 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D52950F64BD0AD6ACC1028 /* AudioService.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		03736595E8CE167418DE1957 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6C99937D9860B5C06730E5A1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FAEF33BE3B4710AF3DB0D9BE;
+			remoteInfo = Absorto;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1453F6F68C79D70BA7813D2E /* FocusBallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusBallView.swift; sourceTree = "<group>"; };
+		1A2907CF7C6FB66F357599F7 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
+		30819A661F308EE16DBFD88B /* AbsortoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbsortoApp.swift; sourceTree = "<group>"; };
+		4A7B74B805B91FC549E53698 /* DriftEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftEngineTests.swift; sourceTree = "<group>"; };
+		4E2EB374F6A1F097447CE49F /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		50E116F93FA9D9CD3FF9EFF1 /* WindowWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowWatcher.swift; sourceTree = "<group>"; };
+		61F5F570B9A0219F3532B982 /* SessionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViews.swift; sourceTree = "<group>"; };
+		634A22E387DADE017185CD1E /* GeminiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiClient.swift; sourceTree = "<group>"; };
+		65D52950F64BD0AD6ACC1028 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		676A650F232E9BE79D1BC7A7 /* HeadTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadTracker.swift; sourceTree = "<group>"; };
+		79D327EA0AACC1B69B34F823 /* DriftEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftEngine.swift; sourceTree = "<group>"; };
+		7EC387D22399C3AB911961F0 /* Absorto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Absorto.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		902D1BEE3BE31EA05813BD59 /* FloatingBallPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBallPanel.swift; sourceTree = "<group>"; };
+		93DC0ED4E42826564135CB4D /* SessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionController.swift; sourceTree = "<group>"; };
+		A20C54B5622D04631CAA58F1 /* ScreenCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureService.swift; sourceTree = "<group>"; };
+		C353BF3605E289380E1751E4 /* AbsortoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbsortoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CB0F49F364DA236F7A84555B /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		E2C353BE6A62A6CA783BA0D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F4F03A6E48F4557F2B9D7ACA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F6D16FBE437376F10764B8D7 /* Absorto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Absorto.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		023F95C0EF37D5670FB9D85F /* Vision */ = {
+			isa = PBXGroup;
+			children = (
+				676A650F232E9BE79D1BC7A7 /* HeadTracker.swift */,
+			);
+			path = Vision;
+			sourceTree = "<group>";
+		};
+		0DB8C63EF351F9EAEB037D42 /* AbsortoTests */ = {
+			isa = PBXGroup;
+			children = (
+				4A7B74B805B91FC549E53698 /* DriftEngineTests.swift */,
+			);
+			path = AbsortoTests;
+			sourceTree = "<group>";
+		};
+		20F9A26B5AE8D78C2A297C50 /* Screen */ = {
+			isa = PBXGroup;
+			children = (
+				A20C54B5622D04631CAA58F1 /* ScreenCaptureService.swift */,
+			);
+			path = Screen;
+			sourceTree = "<group>";
+		};
+		3EA339EB9A8A289BBD4E7513 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7EC387D22399C3AB911961F0 /* Absorto.app */,
+				C353BF3605E289380E1751E4 /* AbsortoTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		46BD30661CCD6E9B2599D959 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				4E2EB374F6A1F097447CE49F /* AppConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		4B9EA4FA9109DC84EDA14AE1 /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				93DC0ED4E42826564135CB4D /* SessionController.swift */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		4C160EA6083170A2959EFE54 /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				1A2907CF7C6FB66F357599F7 /* CameraService.swift */,
+			);
+			path = Camera;
+			sourceTree = "<group>";
+		};
+		5448C2369DCFFCE61C6ADF00 = {
+			isa = PBXGroup;
+			children = (
+				B1B54E29F253C1159E2B9D1D /* Absorto */,
+				0DB8C63EF351F9EAEB037D42 /* AbsortoTests */,
+				3EA339EB9A8A289BBD4E7513 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7E8AF57C5889BDEFDC91F111 /* Gemini */ = {
+			isa = PBXGroup;
+			children = (
+				634A22E387DADE017185CD1E /* GeminiClient.swift */,
+			);
+			path = Gemini;
+			sourceTree = "<group>";
+		};
+		800BE667882638346A1B3F4A /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				902D1BEE3BE31EA05813BD59 /* FloatingBallPanel.swift */,
+				1453F6F68C79D70BA7813D2E /* FocusBallView.swift */,
+				61F5F570B9A0219F3532B982 /* SessionViews.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		AA0576D7416F0C9C682AE96C /* Window */ = {
+			isa = PBXGroup;
+			children = (
+				50E116F93FA9D9CD3FF9EFF1 /* WindowWatcher.swift */,
+			);
+			path = Window;
+			sourceTree = "<group>";
+		};
+		B1B54E29F253C1159E2B9D1D /* Absorto */ = {
+			isa = PBXGroup;
+			children = (
+				F6D16FBE437376F10764B8D7 /* Absorto.entitlements */,
+				30819A661F308EE16DBFD88B /* AbsortoApp.swift */,
+				F4F03A6E48F4557F2B9D7ACA /* Assets.xcassets */,
+				E2C353BE6A62A6CA783BA0D3 /* Info.plist */,
+				E3A14C12A9EA71CFF8E9A7A2 /* Audio */,
+				4C160EA6083170A2959EFE54 /* Camera */,
+				46BD30661CCD6E9B2599D959 /* Config */,
+				DCD2CF9FBF18F09D0B65937E /* Engine */,
+				7E8AF57C5889BDEFDC91F111 /* Gemini */,
+				B467DFA68E089D0C3758CA99 /* Models */,
+				20F9A26B5AE8D78C2A297C50 /* Screen */,
+				4B9EA4FA9109DC84EDA14AE1 /* Session */,
+				800BE667882638346A1B3F4A /* UI */,
+				023F95C0EF37D5670FB9D85F /* Vision */,
+				AA0576D7416F0C9C682AE96C /* Window */,
+			);
+			path = Absorto;
+			sourceTree = "<group>";
+		};
+		B467DFA68E089D0C3758CA99 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				CB0F49F364DA236F7A84555B /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		DCD2CF9FBF18F09D0B65937E /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				79D327EA0AACC1B69B34F823 /* DriftEngine.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		E3A14C12A9EA71CFF8E9A7A2 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				65D52950F64BD0AD6ACC1028 /* AudioService.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8A7C26482DBBAC814CF71D34 /* AbsortoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB9056CD02760DE964B2D7E9 /* Build configuration list for PBXNativeTarget "AbsortoTests" */;
+			buildPhases = (
+				F0548B968E676CCCD233BC30 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BC6ED7B4C99107A1E92529A1 /* PBXTargetDependency */,
+			);
+			name = AbsortoTests;
+			packageProductDependencies = (
+			);
+			productName = AbsortoTests;
+			productReference = C353BF3605E289380E1751E4 /* AbsortoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FAEF33BE3B4710AF3DB0D9BE /* Absorto */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8844D14AE14DCA5A4427588 /* Build configuration list for PBXNativeTarget "Absorto" */;
+			buildPhases = (
+				C808007C8C5C44E2A038FC63 /* Sources */,
+				49D9351CC8E0D2D3E46DE987 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Absorto;
+			packageProductDependencies = (
+			);
+			productName = Absorto;
+			productReference = 7EC387D22399C3AB911961F0 /* Absorto.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6C99937D9860B5C06730E5A1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 4A33D63079BF21D47F0965BB /* Build configuration list for PBXProject "Absorto" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 5448C2369DCFFCE61C6ADF00;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3EA339EB9A8A289BBD4E7513 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FAEF33BE3B4710AF3DB0D9BE /* Absorto */,
+				8A7C26482DBBAC814CF71D34 /* AbsortoTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		49D9351CC8E0D2D3E46DE987 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				294096A4C3FC01DF0C39B99C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C808007C8C5C44E2A038FC63 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A3EC113DD0F69A76396A5A77 /* AbsortoApp.swift in Sources */,
+				978CE1A30CBE4E562AED9919 /* AppConfig.swift in Sources */,
+				DFDBDA2D0BA38345060B1B77 /* AudioService.swift in Sources */,
+				A2C93695A968CE691614C62F /* CameraService.swift in Sources */,
+				7CCF9F1FB5DBF4C9B1ED946F /* DriftEngine.swift in Sources */,
+				7178741766682D31B20007F7 /* FloatingBallPanel.swift in Sources */,
+				C5576CD1D8A7465B711E7970 /* FocusBallView.swift in Sources */,
+				A76F56EC9E14E20574681588 /* GeminiClient.swift in Sources */,
+				0FDDAE7329DEAB1BBF036ECA /* HeadTracker.swift in Sources */,
+				8C4608646EBE73F0F3FE44EF /* Models.swift in Sources */,
+				AA7C2967401846AD98FEEE97 /* ScreenCaptureService.swift in Sources */,
+				C657A359C2A56B2327E5A1D4 /* SessionController.swift in Sources */,
+				2BD3428F892148B77CB6A828 /* SessionViews.swift in Sources */,
+				512E103076117DE87631F69A /* WindowWatcher.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F0548B968E676CCCD233BC30 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D45BBF0CD1DEE152FE5ABEF4 /* DriftEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BC6ED7B4C99107A1E92529A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FAEF33BE3B4710AF3DB0D9BE /* Absorto */;
+			targetProxy = 03736595E8CE167418DE1957 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		00B0A96F996430BA55DF8333 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		00DB3EB40E95C73B76DC44DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Absorto/Absorto.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Absorto/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.absorto.pow;
+				PRODUCT_NAME = Absorto;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		787C6C187B9322F5E65D407E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		9BC42EF773CA048C1F0DE587 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.absorto.pow.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Absorto.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Absorto";
+			};
+			name = Release;
+		};
+		B01CFA0BB734F31C4605FD5D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.absorto.pow.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Absorto.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Absorto";
+			};
+			name = Debug;
+		};
+		C337F74C30F73F49ED6D9787 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Absorto/Absorto.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Absorto/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.absorto.pow;
+				PRODUCT_NAME = Absorto;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4A33D63079BF21D47F0965BB /* Build configuration list for PBXProject "Absorto" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00B0A96F996430BA55DF8333 /* Debug */,
+				787C6C187B9322F5E65D407E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AB9056CD02760DE964B2D7E9 /* Build configuration list for PBXNativeTarget "AbsortoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B01CFA0BB734F31C4605FD5D /* Debug */,
+				9BC42EF773CA048C1F0DE587 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D8844D14AE14DCA5A4427588 /* Build configuration list for PBXNativeTarget "Absorto" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00DB3EB40E95C73B76DC44DE /* Debug */,
+				C337F74C30F73F49ED6D9787 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6C99937D9860B5C06730E5A1 /* Project object */;
+}

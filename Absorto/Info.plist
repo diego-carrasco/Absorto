@@ -25,12 +25,10 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Absorto watches your head position on-device to detect study drift. Frames leave the Mac only when a drift rule fires.</string>
+	<string>Absorto watches your head position on-device to detect study drift. The camera stays on your Mac; you choose any study photo Gemini sees at the end.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Absorto does not record audio; this may be requested by system frameworks.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSScreenCaptureDescription</key>
-	<string>Absorto captures one screen frame at session start, end, and when drift is confirmed so Gemini can see what you were studying.</string>
 </dict>
 </plist>

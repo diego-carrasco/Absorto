@@ -43,9 +43,8 @@ targets:
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true
         NSPrincipalClass: NSApplication
-        NSCameraUsageDescription: Absorto watches your head position on-device to detect study drift. Frames leave the Mac only when a drift rule fires.
+        NSCameraUsageDescription: Absorto watches your head position on-device to detect study drift. The camera stays on your Mac; you choose any study photo Gemini sees at the end.
         NSMicrophoneUsageDescription: Absorto does not record audio; this may be requested by system frameworks.
-        NSScreenCaptureDescription: Absorto captures one screen frame at session start, end, and when drift is confirmed so Gemini can see what you were studying.
     entitlements:
       path: Absorto/Absorto.entitlements
       properties:

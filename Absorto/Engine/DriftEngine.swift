@@ -8,6 +8,8 @@ public struct DriftEngine: Equatable, Sendable {
         public var cooldownDuration: TimeInterval
         public var voiceSpacing: TimeInterval
         public var recoverRatePerSecond: Double
+        /// Base shrink rate (1×). Applied as 1× / 2× / 3× by remaining ball size.
+        /// With defaults, full white → 0 while distracted is ~10s (≈5s + 2.5s + 1.7s).
         public var shrinkBasePerSecond: Double
         public var yawThresholdDegrees: Double
         public var pitchThresholdDegrees: Double
@@ -17,9 +19,9 @@ public struct DriftEngine: Equatable, Sendable {
             cooldownDuration: 10.0,
             voiceSpacing: 120.0,
             recoverRatePerSecond: 1.0 / 150.0, // full recovery ~2.5 minutes
-            shrinkBasePerSecond: 0.025,
-            yawThresholdDegrees: 32,
-            pitchThresholdDegrees: 24
+            shrinkBasePerSecond: 1.0 / 15.0,   // 1× stage; then 2× / 3× as the ball shrinks
+            yawThresholdDegrees: 36,
+            pitchThresholdDegrees: 28
         )
 
         public static let demo = Config(
@@ -27,9 +29,9 @@ public struct DriftEngine: Equatable, Sendable {
             cooldownDuration: 6.0,
             voiceSpacing: 30.0,
             recoverRatePerSecond: 1.0 / 60.0,
-            shrinkBasePerSecond: 0.05,
-            yawThresholdDegrees: 34,
-            pitchThresholdDegrees: 26
+            shrinkBasePerSecond: 1.0 / 12.0,
+            yawThresholdDegrees: 36,
+            pitchThresholdDegrees: 28
         )
 
         public static var yawThresholdDegrees: Double { Config.default.yawThresholdDegrees }
@@ -66,6 +68,10 @@ public struct DriftEngine: Equatable, Sendable {
     public private(set) var focusScoreAccumulated: TimeInterval
     public private(set) var focusedTime: TimeInterval
     public private(set) var totalTrackedTime: TimeInterval
+    /// Rule currently accumulating toward a fire (nil if not holding).
+    public private(set) var activeHoldRule: DriftRule?
+    /// Seconds into the current hold (0 if not holding).
+    public private(set) var activeHoldElapsed: TimeInterval
 
     private var holdRule: DriftRule?
     private var holdStartedAt: Date?
@@ -74,8 +80,6 @@ public struct DriftEngine: Equatable, Sendable {
     private var currentlyDrifting: Bool
     private var activeDriftRule: DriftRule?
     private var lastTickAt: Date?
-    /// Continuous shrink stops after this many seconds of an active drift bout.
-    private var driftShrinkBudget: TimeInterval
 
     public init(config: Config = .default, ballSize: Double = 1.0) {
         self.config = config
@@ -83,6 +87,8 @@ public struct DriftEngine: Equatable, Sendable {
         self.focusScoreAccumulated = 0
         self.focusedTime = 0
         self.totalTrackedTime = 0
+        self.activeHoldRule = nil
+        self.activeHoldElapsed = 0
         self.holdRule = nil
         self.holdStartedAt = nil
         self.cooldownUntil = nil
@@ -90,11 +96,23 @@ public struct DriftEngine: Equatable, Sendable {
         self.currentlyDrifting = false
         self.activeDriftRule = nil
         self.lastTickAt = nil
-        self.driftShrinkBudget = 0
     }
 
     public mutating func setDemoMode(_ enabled: Bool) {
         config = enabled ? .demo : .default
+    }
+
+    /// Restore the focus ball after an attention-lost pause or “I’m back”.
+    public mutating func restoreFocusBall(to size: Double = 1.0) {
+        ballSize = max(0, min(1, size))
+        currentlyDrifting = false
+        activeDriftRule = nil
+        resetHold()
+        clearHoldProgress()
+    }
+
+    public mutating func setBallSize(_ size: Double) {
+        ballSize = max(0, min(1, size))
     }
 
     public var focusScore: Double {
@@ -107,6 +125,8 @@ public struct DriftEngine: Equatable, Sendable {
         return last < until
     }
 
+    public var isDrifting: Bool { currentlyDrifting }
+
     /// Whether a spoken nudge is allowed now (spacing gate).
     public func shouldSpeak(at time: Date) -> Bool {
         guard let last = lastVoiceAt else { return true }
@@ -117,11 +137,10 @@ public struct DriftEngine: Equatable, Sendable {
         lastVoiceAt = time
     }
 
-    /// Apply a confirmed distraction burst. Does **not** force `currentlyDrifting`
-    /// (gaze ownership stays in `process`, so a late Gemini reply cannot re-lock shrink).
+    /// Apply a confirmed distraction burst (window drifts / explicit penalties).
     public mutating func applyConfirmedDistraction(severity: Int, duration: TimeInterval = 0) {
         let sev = max(1, min(5, severity))
-        let burst = Double(sev) * 0.08
+        let burst = Double(sev) * 0.05
         let ongoing = min(duration, 3.0) * config.shrinkBasePerSecond * (Double(sev) / 3.0)
         ballSize = max(0, ballSize - burst - ongoing)
     }
@@ -130,11 +149,10 @@ public struct DriftEngine: Equatable, Sendable {
     public mutating func applyFalseAlarm(at time: Date) {
         currentlyDrifting = false
         activeDriftRule = nil
-        driftShrinkBudget = 0
-        // Undo the optimistic severity-2 burst from process()
-        ballSize = min(1, ballSize + 0.16)
+        ballSize = min(1, ballSize + 0.12)
         cooldownUntil = time.addingTimeInterval(config.cooldownDuration)
         resetHold()
+        clearHoldProgress()
     }
 
     /// Process one head reading. Returns fire once when hold threshold is crossed.
@@ -145,70 +163,82 @@ public struct DriftEngine: Equatable, Sendable {
             pitchThreshold: config.pitchThresholdDegrees
         )
 
-        // Recover whenever gaze is on-screen, even during Gemini cooldown.
+        // Recover whenever gaze is on-screen.
         if rule == nil, currentlyDrifting {
             currentlyDrifting = false
             activeDriftRule = nil
-            driftShrinkBudget = 0
             tickBall(at: time, shouldShrink: false)
             resetHold()
+            clearHoldProgress()
             lastTickAt = time
             return .refocused
         }
 
-        let shouldShrink = currentlyDrifting && rule != nil && driftShrinkBudget > 0
+        // Shrink for as long as the distraction continues — no short budget.
+        let shouldShrink = currentlyDrifting && rule != nil
         tickBall(at: time, shouldShrink: shouldShrink)
 
         if let until = cooldownUntil, time < until {
-            // Cooldown blocks new fires, but never blocks recovery (handled above).
             if currentlyDrifting, let rule {
                 activeDriftRule = rule
+                clearHoldProgress()
                 lastTickAt = time
                 return .stillDrifting(rule: rule)
             }
+            // Still in cooldown and not drifting: hold does not accumulate.
             resetHold()
+            clearHoldProgress()
             lastTickAt = time
             return .none
         }
 
         guard let rule else {
             resetHold()
+            clearHoldProgress()
             lastTickAt = time
             return .none
         }
 
         if currentlyDrifting {
             activeDriftRule = rule
+            clearHoldProgress()
             lastTickAt = time
             return .stillDrifting(rule: rule)
         }
 
-        // Require a longer hold for no-face so blinks never unlock a fire.
-        let neededHold = rule == .noFace ? max(config.holdDuration, 4.0) : config.holdDuration
+        // Exact hold for every rule (no-face included): blinks are filtered in HeadTracker.
+        let neededHold = config.holdDuration
 
         if holdRule != rule {
             holdRule = rule
             holdStartedAt = time
+            activeHoldRule = rule
+            activeHoldElapsed = 0
             lastTickAt = time
             return .none
         }
 
         guard let start = holdStartedAt else {
             holdStartedAt = time
+            activeHoldRule = rule
+            activeHoldElapsed = 0
             lastTickAt = time
             return .none
         }
 
         let held = time.timeIntervalSince(start)
+        activeHoldRule = rule
+        activeHoldElapsed = held
         lastTickAt = time
+
         if held >= neededHold {
             currentlyDrifting = true
             activeDriftRule = rule
-            driftShrinkBudget = 4.0 // brief taper after fire, not forever
             cooldownUntil = time.addingTimeInterval(config.cooldownDuration)
-            // Optimistic shrink while Gemini answers
-            applyConfirmedDistraction(severity: 2, duration: 0)
+            // Tiny kick so the ball reacts immediately; continuous shrink does the rest.
+            ballSize = max(0, ballSize - 0.04)
             resetHold()
+            clearHoldProgress()
             return .fire(rule: rule, heldFor: held)
         }
 
@@ -222,20 +252,31 @@ public struct DriftEngine: Equatable, Sendable {
         }
         currentlyDrifting = true
         activeDriftRule = .offTaskWindow
-        driftShrinkBudget = 3.0
         cooldownUntil = time.addingTimeInterval(config.cooldownDuration)
         applyConfirmedDistraction(severity: 3, duration: 0)
         resetHold()
+        clearHoldProgress()
         lastTickAt = time
         return .fire(rule: .offTaskWindow, heldFor: 0)
     }
 
-    public func breakMinutes(quizScore: Double) -> Int {
-        // Ball final size + quiz score → 10 / 5 / short review (0)
-        let combined = (ballSize * 0.6) + (quizScore * 0.4)
-        if combined >= 0.7 { return 10 }
-        if combined >= 0.4 { return 5 }
-        return 0 // short review block
+    /// Break length from quiz accuracy + confirmed distraction count.
+    /// Base 10 minutes; −1 per wrong answer; −1 per confirmed drift; floor 1, cap 10.
+    public static func breakMinutes(correctCount: Int, questionCount: Int, confirmedDrifts: Int) -> Int {
+        let total = max(questionCount, 1)
+        let correct = min(max(correctCount, 0), total)
+        let wrong = total - correct
+        let drifts = max(0, confirmedDrifts)
+        return max(1, min(10, 10 - wrong - drifts))
+    }
+
+    public func breakMinutes(quizScore: Double, questionCount: Int = 3, confirmedDrifts: Int = 0) -> Int {
+        let correct = Int((quizScore * Double(max(questionCount, 1))).rounded())
+        return Self.breakMinutes(
+            correctCount: correct,
+            questionCount: questionCount,
+            confirmedDrifts: confirmedDrifts
+        )
     }
 
     // MARK: - Private
@@ -243,6 +284,11 @@ public struct DriftEngine: Equatable, Sendable {
     private mutating func resetHold() {
         holdRule = nil
         holdStartedAt = nil
+    }
+
+    private mutating func clearHoldProgress() {
+        activeHoldRule = nil
+        activeHoldElapsed = 0
     }
 
     private mutating func tickBall(at time: Date, shouldShrink: Bool) {
@@ -257,12 +303,18 @@ public struct DriftEngine: Equatable, Sendable {
         }
 
         if shouldShrink {
-            let applied = min(dt, driftShrinkBudget)
-            driftShrinkBudget = max(0, driftShrinkBudget - dt)
-            let rate = config.shrinkBasePerSecond
-            ballSize = max(0, ballSize - rate * applied)
+            // Stepped constant rates: slow while large, faster as it disappears.
+            // ball > 2/3 → 1×, > 1/3 → 2×, else → 3×.
+            ballSize = max(0, ballSize - steppedShrinkRate(for: ballSize) * dt)
         } else {
             ballSize = min(1, ballSize + config.recoverRatePerSecond * dt)
         }
+    }
+
+    private func steppedShrinkRate(for size: Double) -> Double {
+        let base = config.shrinkBasePerSecond
+        if size > (2.0 / 3.0) { return base * 1.0 }
+        if size > (1.0 / 3.0) { return base * 2.0 }
+        return base * 3.0
     }
 }

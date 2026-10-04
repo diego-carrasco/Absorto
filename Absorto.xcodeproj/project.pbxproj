@@ -11,8 +11,11 @@
 		294096A4C3FC01DF0C39B99C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F4F03A6E48F4557F2B9D7ACA /* Assets.xcassets */; };
 		2BD3428F892148B77CB6A828 /* SessionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F5F570B9A0219F3532B982 /* SessionViews.swift */; };
 		512E103076117DE87631F69A /* WindowWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E116F93FA9D9CD3FF9EFF1 /* WindowWatcher.swift */; };
+		537B3CDAB3789E763F29862B /* StudyOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B48D600C35316D7CC58FFA7 /* StudyOCRService.swift */; };
+		5424B89F8214D669E5FB9BF2 /* SessionCrownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD4166F0AB8BE081B994733 /* SessionCrownView.swift */; };
 		7178741766682D31B20007F7 /* FloatingBallPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 902D1BEE3BE31EA05813BD59 /* FloatingBallPanel.swift */; };
 		7CCF9F1FB5DBF4C9B1ED946F /* DriftEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D327EA0AACC1B69B34F823 /* DriftEngine.swift */; };
+		82D25B92C9EB330701EBFAEE /* LocalPhotoQuizBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7C701EAA3839FC50EA6261 /* LocalPhotoQuizBuilder.swift */; };
 		8C4608646EBE73F0F3FE44EF /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0F49F364DA236F7A84555B /* Models.swift */; };
 		978CE1A30CBE4E562AED9919 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E2EB374F6A1F097447CE49F /* AppConfig.swift */; };
 		A2C93695A968CE691614C62F /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2907CF7C6FB66F357599F7 /* CameraService.swift */; };
@@ -36,9 +39,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0B48D600C35316D7CC58FFA7 /* StudyOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyOCRService.swift; sourceTree = "<group>"; };
 		1453F6F68C79D70BA7813D2E /* FocusBallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusBallView.swift; sourceTree = "<group>"; };
 		1A2907CF7C6FB66F357599F7 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		30819A661F308EE16DBFD88B /* AbsortoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbsortoApp.swift; sourceTree = "<group>"; };
+		3AD4166F0AB8BE081B994733 /* SessionCrownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCrownView.swift; sourceTree = "<group>"; };
+		3B7C701EAA3839FC50EA6261 /* LocalPhotoQuizBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalPhotoQuizBuilder.swift; sourceTree = "<group>"; };
 		4A7B74B805B91FC549E53698 /* DriftEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftEngineTests.swift; sourceTree = "<group>"; };
 		4E2EB374F6A1F097447CE49F /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		50E116F93FA9D9CD3FF9EFF1 /* WindowWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowWatcher.swift; sourceTree = "<group>"; };
@@ -63,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				676A650F232E9BE79D1BC7A7 /* HeadTracker.swift */,
+				0B48D600C35316D7CC58FFA7 /* StudyOCRService.swift */,
 			);
 			path = Vision;
 			sourceTree = "<group>";
@@ -103,6 +110,7 @@
 		4B9EA4FA9109DC84EDA14AE1 /* Session */ = {
 			isa = PBXGroup;
 			children = (
+				3B7C701EAA3839FC50EA6261 /* LocalPhotoQuizBuilder.swift */,
 				93DC0ED4E42826564135CB4D /* SessionController.swift */,
 			);
 			path = Session;
@@ -138,6 +146,7 @@
 			children = (
 				902D1BEE3BE31EA05813BD59 /* FloatingBallPanel.swift */,
 				1453F6F68C79D70BA7813D2E /* FocusBallView.swift */,
+				3AD4166F0AB8BE081B994733 /* SessionCrownView.swift */,
 				61F5F570B9A0219F3532B982 /* SessionViews.swift */,
 			);
 			path = UI;
@@ -292,10 +301,13 @@
 				C5576CD1D8A7465B711E7970 /* FocusBallView.swift in Sources */,
 				A76F56EC9E14E20574681588 /* GeminiClient.swift in Sources */,
 				0FDDAE7329DEAB1BBF036ECA /* HeadTracker.swift in Sources */,
+				82D25B92C9EB330701EBFAEE /* LocalPhotoQuizBuilder.swift in Sources */,
 				8C4608646EBE73F0F3FE44EF /* Models.swift in Sources */,
 				AA7C2967401846AD98FEEE97 /* ScreenCaptureService.swift in Sources */,
 				C657A359C2A56B2327E5A1D4 /* SessionController.swift in Sources */,
+				5424B89F8214D669E5FB9BF2 /* SessionCrownView.swift in Sources */,
 				2BD3428F892148B77CB6A828 /* SessionViews.swift in Sources */,
+				537B3CDAB3789E763F29862B /* StudyOCRService.swift in Sources */,
 				512E103076117DE87631F69A /* WindowWatcher.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

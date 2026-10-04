@@ -21,8 +21,13 @@ struct AbsortoApp: App {
                         panelBridge.sync(visible: true, controller: controller)
                     }
                 }
+                .onChange(of: controller.isWarningBall) { _, _ in
+                    if controller.showFloatingBall {
+                        panelBridge.sync(visible: true, controller: controller)
+                    }
+                }
         }
-        .defaultSize(width: 560, height: 640)
+        .defaultSize(width: 560, height: 700)
         .windowResizability(.contentSize)
     }
 }
@@ -51,10 +56,9 @@ struct MenuBarContent: View {
             Divider()
 
             if controller.phase == .idle {
-                Button("Start session") {
+                Button("Start session…") {
                     openWindow(id: "session")
                     NSApp.activate(ignoringOtherApps: true)
-                    controller.startSession()
                 }
             } else if controller.phase == .studying {
                 Button("End session") {
@@ -64,17 +68,23 @@ struct MenuBarContent: View {
                 Text("Ball \(Int(controller.ballSize * 100))%")
                 Text(controller.session?.topic ?? "Studying…")
                     .lineLimit(1)
+            } else if controller.phase == .attentionLost {
+                Button("I'm back") {
+                    openWindow(id: "session")
+                    controller.resumeFromAttentionLost()
+                }
+                Button("Start over") {
+                    openWindow(id: "session")
+                    controller.startOverFromAttentionLost()
+                }
             } else {
                 Text(statusLabel)
             }
 
             Divider()
 
-            Toggle("Demo mode", isOn: Binding(
-                get: { controller.demoMode },
-                set: { _ in controller.toggleDemoMode() }
-            ))
-            .disabled(controller.phase != .idle)
+            Text("Session \(controller.selectedSessionMinutes) min")
+                .foregroundStyle(.secondary)
 
             Divider()
 
@@ -88,12 +98,14 @@ struct MenuBarContent: View {
         switch controller.phase {
         case .idle: return "Ready"
         case .requestingPermissions: return "Permissions…"
+        case .preparingCalibration(let s): return "Get ready (\(s)s)"
         case .calibrating(let s): return "Calibrating (\(s)s)"
         case .studying: return "Studying"
+        case .attentionLost: return "Attention lost"
         case .ending: return "Ending…"
-        case .attentionMap: return "Focus check"
-        case .recall: return "Focus check"
-        case .breakReady: return "Break ready"
+        case .submitEvidence: return "Submit photo"
+        case .recall: return "Recall quiz"
+        case .breakStarting(let s): return "Break in \(s)s"
         case .onBreak: return "On break"
         }
     }

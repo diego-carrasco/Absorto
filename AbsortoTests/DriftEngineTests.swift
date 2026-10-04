@@ -70,18 +70,32 @@ final class DriftEngineTests: XCTestCase {
         XCTAssertEqual(fireCount, 1, "cooldown should suppress a second Gemini trigger")
     }
 
-    func testNoFaceRule() {
-        var engine = DriftEngine(config: .demo) // no-face needs ≥4s
+    func testNoFaceFiresAtExactlyFiveSeconds() {
+        var engine = DriftEngine(config: .default)
         let start = Date(timeIntervalSince1970: 1_000_000)
-        var fired: DriftRule?
+        var firedAt: TimeInterval?
 
-        for t in stride(from: 0.0, through: 4.5, by: 0.5) {
+        for t in stride(from: 0.0, through: 6.0, by: 0.25) {
             if case .fire(let rule, _) = engine.process(reading: reading(at: t, face: false, from: start)) {
-                fired = rule
+                XCTAssertEqual(rule, .noFace)
+                firedAt = t
+                break
             }
+            XCTAssertEqual(engine.ballSize, 1.0, accuracy: 0.001, "t=\(t)")
         }
 
-        XCTAssertEqual(fired, .noFace)
+        XCTAssertEqual(firedAt ?? -1, 5.0, accuracy: 0.26)
+    }
+
+    func testContinuousDistractionEmptiesBall() {
+        var engine = DriftEngine(config: .default)
+        let start = Date(timeIntervalSince1970: 1_000_000)
+
+        for t in stride(from: 0.0, through: 30.0, by: 0.5) {
+            _ = engine.process(reading: reading(at: t, face: false, from: start))
+        }
+
+        XCTAssertLessThanOrEqual(engine.ballSize, 0.02)
     }
 
     func testBriefNoFaceDoesNotShrinkBeforeFire() {
@@ -122,14 +136,23 @@ final class DriftEngineTests: XCTestCase {
         XCTAssertGreaterThan(engine.ballSize, shrunken)
     }
 
-    func testBreakMinutesFromBallAndScore() {
+    func testBreakMinutesFromQuizAndDrifts() {
+        XCTAssertEqual(
+            DriftEngine.breakMinutes(correctCount: 10, questionCount: 10, confirmedDrifts: 0),
+            10
+        )
+        // 6/10 correct → 4 wrong; 3 drifts → 10 - 4 - 3 = 3
+        XCTAssertEqual(
+            DriftEngine.breakMinutes(correctCount: 6, questionCount: 10, confirmedDrifts: 3),
+            3
+        )
+        // Floor at 1
+        XCTAssertEqual(
+            DriftEngine.breakMinutes(correctCount: 0, questionCount: 10, confirmedDrifts: 20),
+            1
+        )
         var engine = DriftEngine(config: .default)
-        XCTAssertEqual(engine.breakMinutes(quizScore: 1.0), 10)
-
-        engine.applyConfirmedDistraction(severity: 5, duration: 10)
-        // Very small ball + poor quiz → review block
-        let minutes = engine.breakMinutes(quizScore: 0.0)
-        XCTAssertTrue([0, 5].contains(minutes))
+        XCTAssertEqual(engine.breakMinutes(quizScore: 1.0, questionCount: 10, confirmedDrifts: 0), 10)
     }
 
     func testVoiceSpacing() {

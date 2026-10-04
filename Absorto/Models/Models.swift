@@ -35,6 +35,8 @@ public enum DriftSource: String, Codable, Equatable, Sendable {
 
 public enum DriftRule: String, Codable, Equatable, Sendable {
     case noFace = "no_face"
+    case eyesClosed = "eyes_closed"
+    case yawn = "yawn"
     case headTurned = "head_turned"
     case headDown = "head_down"
     case offTaskWindow = "off_task_window"
@@ -141,12 +143,33 @@ public struct HeadReading: Equatable, Sendable {
     public let yawDelta: Double
     /// Pitch relative to calibrated baseline, degrees. Positive = looking down.
     public let pitchDelta: Double
+    /// True when both eyes stay clearly more closed than the calibrated baseline.
+    public let eyesClosed: Bool
+    /// True when mouth opening clearly exceeds the calibrated baseline (yawn).
+    public let yawning: Bool
+    /// Live eye aspect ratio (height/width); 0 if unavailable.
+    public let eyeAspectRatio: Double
+    /// Live mouth aspect ratio (height/width); 0 if unavailable.
+    public let mouthAspectRatio: Double
 
-    public init(timestamp: Date, facePresent: Bool, yawDelta: Double, pitchDelta: Double) {
+    public init(
+        timestamp: Date,
+        facePresent: Bool,
+        yawDelta: Double,
+        pitchDelta: Double,
+        eyesClosed: Bool = false,
+        yawning: Bool = false,
+        eyeAspectRatio: Double = 0,
+        mouthAspectRatio: Double = 0
+    ) {
         self.timestamp = timestamp
         self.facePresent = facePresent
         self.yawDelta = yawDelta
         self.pitchDelta = pitchDelta
+        self.eyesClosed = eyesClosed
+        self.yawning = yawning
+        self.eyeAspectRatio = eyeAspectRatio
+        self.mouthAspectRatio = mouthAspectRatio
     }
 
     public var isLookingAway: Bool {
@@ -172,9 +195,11 @@ public struct HeadReading: Equatable, Sendable {
         facePresent && pitchDelta >= pitchThreshold
     }
 
-    /// Prefer pitch (head down) over yaw when both exceed thresholds.
+    /// Priority: no face → eyes closed → yawn → head down → head turned.
     public func activeRule(yawThreshold: Double, pitchThreshold: Double) -> DriftRule? {
         if !facePresent { return .noFace }
+        if eyesClosed { return .eyesClosed }
+        if yawning { return .yawn }
         if isLookingDown(pitchThreshold: pitchThreshold) { return .headDown }
         if isLookingAway(yawThreshold: yawThreshold) { return .headTurned }
         return nil
@@ -194,13 +219,34 @@ public struct HeadBaseline: Equatable, Sendable {
 public enum SessionPhase: Equatable, Sendable {
     case idle
     case requestingPermissions
+    /// Get seated / face the camera before samples are taken.
+    case preparingCalibration(secondsLeft: Int)
     case calibrating(secondsLeft: Int)
     case studying
+    /// White ball hit zero; red warning held ~5s — waiting for user choice.
+    case attentionLost
     case ending
-    case attentionMap
+    case submitEvidence
     case recall
-    case breakReady
+    /// Brief pause after quiz submit before the break timer starts.
+    case breakStarting(secondsLeft: Int)
     case onBreak
+}
+
+/// One line in the break penalty breakdown (quiz item or distractions).
+public struct BreakPenaltyLine: Identifiable, Equatable, Sendable {
+    public let id: UUID
+    public var title: String
+    public var detail: String
+    /// true = green (no penalty / correct), false = red (time withdrawn)
+    public var isCredit: Bool
+
+    public init(id: UUID = UUID(), title: String, detail: String, isCredit: Bool) {
+        self.id = id
+        self.title = title
+        self.detail = detail
+        self.isCredit = isCredit
+    }
 }
 
 public struct AttentionMapResult: Equatable, Sendable {

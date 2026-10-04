@@ -58,15 +58,33 @@ final class WindowWatcher: ObservableObject {
         if app.bundleIdentifier == Bundle.main.bundleIdentifier { return }
 
         let name = app.localizedName ?? app.bundleIdentifier ?? "App"
-        let title = frontWindowTitle(for: app) ?? name
-        let key = "\(name)|\(title)"
+        let rawTitle = frontWindowTitle(for: app) ?? name
+        let title = Self.normalizeTitle(rawTitle)
+        let key = "\(name.lowercased())|\(title.lowercased())"
 
         appName = name
         windowTitle = title
 
+        // Ignore trivial / unstable AX flicker (empty, same as app name only once).
+        guard !title.isEmpty else { return }
+
         if seenTitles.insert(key).inserted {
             onNewTitle?(name, title)
         }
+    }
+
+    private static func normalizeTitle(_ title: String) -> String {
+        var t = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Strip common unread / loading prefixes that churn and re-trigger Gemini.
+        while t.hasPrefix("•") || t.hasPrefix("*") || t.hasPrefix("●") {
+            t = String(t.dropFirst()).trimmingCharacters(in: .whitespaces)
+        }
+        if let range = t.range(of: #"^\(\d+\)\s*"#, options: .regularExpression) {
+            t.removeSubrange(range)
+        }
+        // Collapse whitespace
+        t = t.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        return t
     }
 
     private func frontWindowTitle(for app: NSRunningApplication) -> String? {

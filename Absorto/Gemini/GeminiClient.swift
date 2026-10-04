@@ -153,13 +153,15 @@ actor GeminiClient {
         ]
 
         let prompt = """
-        Study topic for this session: \(topic.isEmpty ? "(unknown — infer carefully)" : topic)
+        The student declared they are studying: \(topic.isEmpty ? "(undeclared)" : topic)
         Front app: \(appName)
         Window/tab title: \(windowTitle)
-        Is this on-task for studying that topic? Cat videos, social feeds, shopping, games = no.
-        Lecture slides, docs, textbooks, course pages, IDE for coursework = yes.
-        If unsure from the title alone, return unsure (do not guess "no").
-        Return JSON only.
+
+        Is this window/tab reasonably on-task for that declared topic?
+        - Recreational video, social feeds, shopping, games, memes, unrelated entertainment = no
+        - Docs, slides, PDFs, textbooks, course pages, IDE/notes clearly related to the topic = yes
+        - Ambiguous titles with no clear signal = unsure (do not guess "no")
+        Judge from the title text alone. Return JSON only.
         """
 
         let json = try await generateJSON(prompt: prompt, images: [], schema: schema)
@@ -178,34 +180,24 @@ actor GeminiClient {
         return nil
     }
 
-    // MARK: 4. Focus check (attention summary + useful recall)
+    // MARK: 4. Photo recall — 3 multiple-choice from user-submitted evidence
 
-    func buildAttentionMap(
+    func buildPhotoQuiz(
+        photoJPEG: Data,
+        topic: String,
         drifts: [DriftEvent],
-        startScreenJPEG: Data?,
-        endScreenJPEG: Data?,
-        topicHint: String
-    ) async throws -> AttentionMapResult {
+        sessionId: UUID
+    ) async throws -> [Question] {
         try throwIfRateLimited()
 
         let schema: [String: Any] = [
             "type": "object",
             "properties": [
-                "topic": ["type": "string"],
-                "summary": ["type": "string"],
-                "hotspots": [
-                    "type": "array",
-                    "items": ["type": "string"]
-                ],
                 "questions": [
                     "type": "array",
                     "items": [
                         "type": "object",
                         "properties": [
-                            "kind": [
-                                "type": "string",
-                                "enum": ["multiple_choice", "teach_back"]
-                            ],
                             "hotspot": ["type": "string"],
                             "text": ["type": "string"],
                             "options": [
@@ -214,67 +206,47 @@ actor GeminiClient {
                             ],
                             "correct_option_index": ["type": "integer"]
                         ],
-                        "required": ["kind", "hotspot", "text"]
+                        "required": ["hotspot", "text", "options", "correct_option_index"]
                     ]
                 ]
             ],
-            "required": ["topic", "summary", "hotspots", "questions"]
+            "required": ["questions"]
         ]
 
-        let registry = drifts
-            .filter { !$0.falseAlarm }
-            .map { e in
-                "- t=\(Int(e.time.timeIntervalSince1970)) source=\(e.source.rawValue) rule=\(e.rule.rawValue) cat=\(e.category?.rawValue ?? "?") sev=\(e.severity) studying=\(e.studying ?? "")"
-            }
-            .joined(separator: "\n")
-
+        let confirmed = drifts.filter { !$0.falseAlarm }.count
         let prompt = """
-        You are building a Focus Check for a finished study session — useful active recall, not busywork.
-        Topic hint: \(topicHint)
-        Drift registry:
-        \(registry.isEmpty ? "(no confirmed drifts)" : registry)
-        Screen images (start then end) may be attached — ground questions in what is actually visible.
+        The student finished a study session on: \(topic.isEmpty ? "their material" : topic).
+        They submitted ONE photo/screenshot of what they studied (attached). Confirmed distractions this session: \(confirmed).
 
-        Return:
-        - topic
-        - summary: where attention broke (1-2 sentences)
-        - hotspots: 2-4 short phrases from the material
-        - questions: exactly 3 items:
-          1) multiple_choice about a concrete fact/concept on the screen (4 options, correct_option_index 0-3)
-          2) multiple_choice about a second concrete detail (4 options, correct_option_index 0-3)
-          3) teach_back: ask them to explain one idea in their own words in 1-2 sentences (no options)
-
-        Make wrong MC options plausible. Prefer drift hotspots when present.
-        Return JSON only.
+        Create exactly 3 multiple-choice questions grounded in what is visible in the photo.
+        Rules:
+        - Each question: 4 options, correct_option_index 0-3
+        - Cover different facts/ideas — do not repeat near-duplicates
+        - Wrong options must be plausible
+        - hotspot: short label for the concept tested
+        Keep the response compact. Return JSON only.
         """
 
-        var images: [Data] = []
-        if let s = startScreenJPEG { images.append(s) }
-        if let e = endScreenJPEG { images.append(e) }
-
-        let json = try await generateJSON(prompt: prompt, images: images, schema: schema)
-        let sessionId = drifts.first?.sessionId ?? UUID()
+        let json = try await generateJSON(prompt: prompt, images: [photoJPEG], schema: schema)
         let qdicts = json["questions"] as? [[String: Any]] ?? []
-        let questions = qdicts.prefix(3).enumerated().map { idx, q -> Question in
-            let kindRaw = q["kind"] as? String ?? (idx < 2 ? "multiple_choice" : "teach_back")
-            let kind = QuestionKind(rawValue: kindRaw) ?? (idx < 2 ? .multipleChoice : .teachBack)
-            let options = q["options"] as? [String] ?? []
+        let questions = qdicts.prefix(3).map { q -> Question in
+            var options = q["options"] as? [String] ?? []
+            while options.count < 4 { options.append("Option \(options.count + 1)") }
+            options = Array(options.prefix(4))
+            let correct = min(max(intValue(q["correct_option_index"]) ?? 0, 0), 3)
             return Question(
                 sessionId: sessionId,
-                hotspot: q["hotspot"] as? String ?? "general",
-                text: q["text"] as? String ?? "What were you studying?",
-                kind: kind,
+                hotspot: q["hotspot"] as? String ?? topic,
+                text: q["text"] as? String ?? "What does this material show?",
+                kind: .multipleChoice,
                 options: options,
-                correctOptionIndex: intValue(q["correct_option_index"])
+                correctOptionIndex: correct
             )
         }
-
-        return AttentionMapResult(
-            topic: json["topic"] as? String ?? topicHint,
-            summary: json["summary"] as? String ?? "Session complete.",
-            hotspots: json["hotspots"] as? [String] ?? [],
-            questions: Array(questions)
-        )
+        guard questions.count == 3 else {
+            throw GeminiError.parseFailed("Expected 3 quiz questions, got \(questions.count)")
+        }
+        return questions
     }
 
     // MARK: 5. Grade answers (MC local-friendly + teach-back coaching)
@@ -579,6 +551,8 @@ actor GeminiClient {
                 return .lookingElsewhere
             case .noFace:
                 return .away
+            case .eyesClosed, .yawn:
+                return .tired
             case .headDown:
                 return .phone
             }
@@ -604,6 +578,10 @@ actor GeminiClient {
                 return "Eyes up — stay with your material."
             case .noFace:
                 return "Come back to your desk."
+            case .eyesClosed:
+                return "Eyes open — stay with your work."
+            case .yawn:
+                return "Shake it off — back to your material."
             case .offTaskWindow:
                 return "That tab is off-task — back to your material."
             }

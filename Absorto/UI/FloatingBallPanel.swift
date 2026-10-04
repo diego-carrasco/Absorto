@@ -76,7 +76,8 @@ struct FloatingBallRoot: View {
             FocusBallView(
                 ballSize: controller.ballSize,
                 timerProgress: controller.timerProgress,
-                compact: true
+                compact: true,
+                style: controller.ballStyle
             )
         }
         .frame(width: 160, height: 160)

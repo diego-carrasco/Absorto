@@ -2,7 +2,7 @@
 
 **Proof-of-Work Pomodoro** — a native macOS study timer that can tell a focused session from a distracted one.
 
-A white focus ball shows your attention live. On-device Vision watches for drift (no face, head turned, head down). When a rule holds long enough, one webcam frame and one screen frame go to Gemini, which labels the distraction, rates severity, and speaks a short personal nudge. At the end, Gemini maps where attention broke and quizzes you on that material before the break unlocks.
+A white focus ball shows your attention live. On-device Vision watches for drift (no face, head turned, head down). You declare what you are studying; Absorto uses tab titles (and Gemini when needed) to catch off-task windows. At the end you **drag in a photo** of your work — Gemini builds a 3-question quiz from it. Break length shrinks with more distractions and missed answers.
 
 Built solo with the Gemini API (MLH: Best Use of Gemini API / Best Solo Project).
 
@@ -10,8 +10,8 @@ Built solo with the Gemini API (MLH: Best Use of Gemini API / Best Solo Project)
 
 - macOS 14+
 - Xcode 15+ (full Xcode app, not only Command Line Tools)
-- Camera + Screen Recording permission
-- Optional: Accessibility (for reliable Chrome tab titles)
+- Camera permission (on-device attention only)
+- Optional: Accessibility (for reliable browser tab titles)
 - Gemini API key ([Google AI Studio](https://aistudio.google.com/))
 
 ## Setup
@@ -32,34 +32,31 @@ open Absorto.xcodeproj
 
 3. In Xcode: select the **Absorto** scheme → **My Mac** → Run.
 
-4. On first launch, grant **Camera** and **Screen Recording**. After enabling Screen Recording, quit and reopen the app.
+4. On first launch, grant **Camera**. Accessibility helps tab-title detection in browsers.
 
 ## How to use (demo)
 
-1. Open your study material (e.g. CMPT 371 slides).
-2. From the menu bar icon (circle), choose **Open Absorto** or **Start session**.
-3. Keep **Demo mode** on for a ~90s session and ~3-second drift hold (no-face needs ~4s so blinks don't fire).
-4. Look at the screen during the 5s calibration.
-5. Pick up your phone or look away — after the hold, a chime plays, the ball shrinks, and a spoken nudge names what you were studying.
-6. A brief glance should not fire.
-7. Open an off-topic tab (e.g. a cat video) — window-title check can flag it without a screenshot.
-8. End the session (or wait for the timer): attention map → 3 recall questions → break length from ball size + score.
+1. Open your study material.
+2. From the menu bar icon, choose **Open Absorto**.
+3. Hover the crown ring around the ball and scroll/drag to pick **1 / 25 / 50** minutes. Enter **what you are studying today**, then start.
+4. Use the short prep window to sit centered and face the webcam, then hold still through calibration.
+5. Look away or open an off-topic tab — after the hold / title check, a chime plays and the ball shrinks.
+6. End the session (or wait for the timer).
+7. **Drag a photo or screenshot** of what you studied into the drop zone. Absorto does not record your screen; Gemini builds 3 questions from the image (topic fallback if Gemini is unavailable).
+8. Answer all 3. After submit, a 5-second countdown runs, then the break timer starts with a green/red breakdown of quiz and distraction penalties.
 
 ## How I used Gemini
 
-Gemini is called only when judgment is needed, never on a timer. Every call returns JSON with a fixed schema.
+Gemini is used for judgment that needs language understanding — not for continuous vision. Detection of head pose is on-device.
 
 | Call | Input | Output | Why |
 |------|--------|--------|-----|
-| **1. Classify drift + nudge** | Webcam JPEG + screen JPEG + rule fired | `is_false_alarm`, `category`, `severity` (1–5), `studying`, `nudge_text` | Labels the distraction, sets shrink speed, writes a personal nudge that names the material |
-| **2. Window title check** | App name + window/tab title + topic | `on_task` (yes/no/unsure), `reason` | Catches off-task tabs from text alone (no screenshot) |
-| **3. Spoken nudge** | `nudge_text` | Audio when available; otherwise AVSpeechSynthesizer | Library-style accountability in the moment |
-| **4. Focus check** | Drift registry + start/end screen frames | `topic`, `summary`, hotspots, 2 multiple-choice + 1 teach-back | Active recall grounded in what was on screen |
-| **5. Grade answers** | MC selections + teach-back | Scores, coaching feedback, next focus | Sets break length with the final ball size |
+| **Window title check** | Declared topic + app + tab title | `on_task` (yes/no/unsure), `reason` | Catches off-task tabs from text alone |
+| **Photo recall quiz** | Study photo JPEG + topic + drift count | 3 multiple-choice questions | Grounds the break quiz in what you actually studied |
 
-Also: one screen frame at session start is used to infer the study topic.
+Obvious recreational titles are filtered locally so free-tier quota is not wasted. Mid-session head drift uses local nudges only.
 
-Frames leave the Mac only when a rule fires (plus start/end screen frames). Nothing is stored. The API key lives in local `Config.plist` (gitignored).
+The API key lives in local `Config.plist` (gitignored).
 
 ## Architecture
 
@@ -68,38 +65,38 @@ Native Swift / SwiftUI macOS app — no backend.
 | Module | Built with | Job |
 |--------|------------|-----|
 | App shell | SwiftUI, MenuBarExtra, floating `NSPanel` | Menu bar, session windows, always-on-top focus ball |
-| Camera | AVFoundation | Low-res frames ~4–5 fps, late frames dropped |
+| Camera | AVFoundation | Low-res frames ~4–5 fps for on-device Vision |
 | Head direction | Vision | Face present, yaw/pitch vs calibration baseline |
-| Drift engine | Pure Swift | Hold, cooldown, voice spacing, ball size — XCTest covered |
-| Screen | ScreenCaptureKit | One-shot frames at start, end, and drift |
-| Window watcher | NSWorkspace + Accessibility title | Event-driven off-task tab detection |
-| Gemini client | URLSession + structured JSON | The five calls above |
-| Audio | System chime + `AVSpeechSynthesizer` | Chime every time; voice rate-limited |
+| Drift engine | Pure Swift | Hold, cooldown, voice spacing, ball size, break math |
+| Window watcher | NSWorkspace + Accessibility title | Event-driven tab detection |
+| Gemini client | URLSession + structured JSON | Title checks + photo quiz |
+| Audio | System chime + `AVSpeechSynthesizer` | Chime every drift; on-device spoken nudges |
+
+## Break length
+
+Base **10 minutes** (demo maps minutes to short seconds):
+
+- −1 minute per missed quiz question
+- −1 minute per confirmed distraction
+- Floor **1 minute**, cap **10 minutes**
+
+After the quiz, Absorto skips a separate “break unlocked” screen: a 5-second countdown shows the penalty lines, then the break timer starts.
 
 ## Tests
-
-Drift engine checks (no camera/Gemini required; works with Command Line Tools):
 
 ```bash
 swift run DriftEngineSmoke
 ```
 
-With full Xcode installed:
+With full Xcode:
 
 ```bash
 swift test
-# or in Xcode: Product → Test
 ```
 
 ## Privacy
 
-- Detection runs on-device with Apple Vision.
-- Gemini sees a frame pair only after a held drift (or title text for window checks).
-- No accounts, no history, no image storage.
-- Aim is an honest focus picture, not surveillance.
-
-## Cut rule / next steps
-
-If scope slips: cut window-title check first, then recall questions (keep attention map), then Gemini voice in favour of the system voice.
-
-After the hackathon: live study room of friends’ focus balls, and App Store release with the Gemini key behind a small server.
+- Attention detection runs on-device with Apple Vision.
+- Absorto does **not** automatically record your screen.
+- Gemini may see **tab titles** (text) and the **study photo you drag in** for the end-of-session quiz.
+- No accounts, no history store. Aim is an honest focus picture, not surveillance.

@@ -77,17 +77,63 @@ struct DriftEngineSmoke {
             check("cooldown: only one fire", fireCount == 1, "count=\(fireCount)")
         }
 
-        // Demo no-face (requires ≥4s hold so blinks don't fire)
+        // Default no-face: exact 5s hold, then fire (blinks filtered in HeadTracker)
         do {
-            var engine = DriftEngine(config: .demo)
+            var engine = DriftEngine(config: .default)
             let start = Date(timeIntervalSince1970: 1_000_000)
-            var fired: DriftRule?
-            for t in stride(from: 0.0, through: 4.5, by: 0.5) {
+            var firedAt: TimeInterval?
+            for t in stride(from: 0.0, through: 6.0, by: 0.25) {
                 if case .fire(let rule, _) = engine.process(reading: reading(at: t, face: false, from: start)) {
-                    fired = rule
+                    check("no-face rule", rule == .noFace)
+                    firedAt = t
+                    break
                 }
             }
-            check("no-face rule", fired == .noFace)
+            check("no-face fires at 5s", abs((firedAt ?? -1) - 5.0) < 0.3, "t=\(String(describing: firedAt))")
+        }
+
+        // Continuous distraction empties the ball (red-path prerequisite)
+        do {
+            var engine = DriftEngine(config: .default)
+            let start = Date(timeIntervalSince1970: 1_000_000)
+            for t in stride(from: 0.0, through: 30.0, by: 0.5) {
+                _ = engine.process(reading: reading(at: t, face: false, from: start))
+            }
+            check("continuous drift empties ball", engine.ballSize <= 0.02, "ball=\(engine.ballSize)")
+        }
+
+        // Eyes closed / yawn use the same 5s hold
+        do {
+            var engine = DriftEngine(config: .default)
+            let start = Date(timeIntervalSince1970: 1_000_000)
+            var fired: DriftRule?
+            for t in stride(from: 0.0, through: 5.5, by: 0.25) {
+                let r = HeadReading(
+                    timestamp: start.addingTimeInterval(t),
+                    facePresent: true,
+                    yawDelta: 0,
+                    pitchDelta: 0,
+                    eyesClosed: true
+                )
+                if case .fire(let rule, _) = engine.process(reading: r) { fired = rule }
+            }
+            check("eyes-closed fires after hold", fired == .eyesClosed)
+        }
+        do {
+            var engine = DriftEngine(config: .default)
+            let start = Date(timeIntervalSince1970: 1_000_000)
+            var fired: DriftRule?
+            for t in stride(from: 0.0, through: 5.5, by: 0.25) {
+                let r = HeadReading(
+                    timestamp: start.addingTimeInterval(t),
+                    facePresent: true,
+                    yawDelta: 0,
+                    pitchDelta: 0,
+                    yawning: true
+                )
+                if case .fire(let rule, _) = engine.process(reading: r) { fired = rule }
+            }
+            check("yawn fires after hold", fired == .yawn)
         }
 
         // Brief no-face must not shrink ball before fire
@@ -145,6 +191,22 @@ struct DriftEngineSmoke {
                 _ = engine.process(reading: reading(at: t, yaw: 10, pitch: 8, from: start))
             }
             check("on-screen gaze keeps ball full", abs(engine.ballSize - 1.0) < 0.001, "ball=\(engine.ballSize)")
+        }
+
+        // Break minutes: quiz misses + drifts
+        do {
+            check(
+                "break full score no drifts",
+                DriftEngine.breakMinutes(correctCount: 10, questionCount: 10, confirmedDrifts: 0) == 10
+            )
+            check(
+                "break 6/10 and 3 drifts",
+                DriftEngine.breakMinutes(correctCount: 6, questionCount: 10, confirmedDrifts: 3) == 3
+            )
+            check(
+                "break floors at 1",
+                DriftEngine.breakMinutes(correctCount: 0, questionCount: 10, confirmedDrifts: 20) == 1
+            )
         }
 
         if failures == 0 {

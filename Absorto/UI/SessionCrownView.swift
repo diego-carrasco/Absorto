@@ -5,6 +5,7 @@ import AppKit
 struct SessionCrownView: View {
     @Binding var selectedMinutes: Int
     var options: [Int] = [1, 25, 50]
+    var onTick: (() -> Void)? = nil
 
     @State private var isHovering = false
     @State private var dragAngle: Double?
@@ -165,6 +166,7 @@ struct SessionCrownView: View {
         if lastTickIndex != (options.firstIndex(of: minutes) ?? 0) {
             lastTickIndex = options.firstIndex(of: minutes) ?? 0
             NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+            onTick?()
         }
     }
 }

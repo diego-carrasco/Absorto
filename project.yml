@@ -45,12 +45,14 @@ targets:
         NSPrincipalClass: NSApplication
         NSCameraUsageDescription: Absorto watches your head position on-device to detect study drift. The camera stays on your Mac; you choose any study photo Gemini sees at the end.
         NSMicrophoneUsageDescription: Absorto does not record audio; this may be requested by system frameworks.
+        NSAppleEventsUsageDescription: Absorto reads the active browser tab title (Safari/Chrome) to check whether it matches what you are studying.
     entitlements:
       path: Absorto/Absorto.entitlements
       properties:
         com.apple.security.app-sandbox: false
         com.apple.security.device.camera: true
         com.apple.security.network.client: true
+        com.apple.security.automation.apple-events: true
   AbsortoTests:
     type: bundle.unit-test
     platform: macOS

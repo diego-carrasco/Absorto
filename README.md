@@ -32,7 +32,25 @@ open Absorto.xcodeproj
 
 3. In Xcode: select the **Absorto** scheme → **My Mac** → Run.
 
-4. On first launch, grant **Camera**. Accessibility helps tab-title detection in browsers.
+4. On first launch, grant **Camera**.
+
+### Off-task detection and macOS permissions
+
+Absorto detects off-task windows in two layers:
+
+| Layer | Needs permission? | Catches |
+|-------|-------------------|---------|
+| App identity (`NSRunningApplication`) | **No** | Spotify, Discord, Netflix, Steam, Messages… |
+| Browser tab title (AppleScript) | Automation (per browser) | Specific YouTube/Reddit/etc. tabs |
+| Window title (Accessibility) | Accessibility | Titles in non-browser apps |
+
+So app-level detection always works. Tab titles need permission.
+
+**Why Accessibility keeps re-asking:** this project builds **ad-hoc signed** (`CODE_SIGN_IDENTITY: "-"`) because there is no Developer certificate installed. macOS stores Accessibility grants against the app's code-signature hash, which changes on **every rebuild** — so the old grant silently stops matching and `AXIsProcessTrusted()` returns false even though an "Absorto" row looks enabled.
+
+Fix it permanently by signing with a (free) Apple Development team in Xcode: target **Absorto** → **Signing & Capabilities** → check *Automatically manage signing* → pick your Team. Then grant Accessibility once.
+
+Absorto no longer pops the system dialog on its own; use **Grant access…** on the studying screen when you want it.
 
 ## How to use (demo)
 

@@ -15,7 +15,7 @@ public struct DriftEngine: Equatable, Sendable {
         public var pitchThresholdDegrees: Double
 
         public static let `default` = Config(
-            holdDuration: 5.0,
+            holdDuration: 3.0,
             cooldownDuration: 10.0,
             voiceSpacing: 120.0,
             recoverRatePerSecond: 1.0 / 150.0, // full recovery ~2.5 minutes
@@ -78,7 +78,7 @@ public struct DriftEngine: Equatable, Sendable {
     private var cooldownUntil: Date?
     private var lastVoiceAt: Date?
     private var currentlyDrifting: Bool
-    private var activeDriftRule: DriftRule?
+    public private(set) var activeDriftRule: DriftRule?
     private var lastTickAt: Date?
 
     public init(config: Config = .default, ballSize: Double = 1.0) {
@@ -163,8 +163,11 @@ public struct DriftEngine: Equatable, Sendable {
             pitchThreshold: config.pitchThresholdDegrees
         )
 
-        // Recover whenever gaze is on-screen.
-        if rule == nil, currentlyDrifting {
+        // Off-task tabs keep shrinking even while the face looks at the screen.
+        let windowDriftActive = currentlyDrifting && activeDriftRule == .offTaskWindow
+
+        // Recover whenever gaze is on-screen — but not while a tab distraction is active.
+        if rule == nil, currentlyDrifting, !windowDriftActive {
             currentlyDrifting = false
             activeDriftRule = nil
             tickBall(at: time, shouldShrink: false)
@@ -174,16 +177,24 @@ public struct DriftEngine: Equatable, Sendable {
             return .refocused
         }
 
-        // Shrink for as long as the distraction continues — no short budget.
-        let shouldShrink = currentlyDrifting && rule != nil
+        // Shrink while head-pose drift continues, or while an off-task tab is still active.
+        let shouldShrink = (currentlyDrifting && rule != nil) || windowDriftActive
         tickBall(at: time, shouldShrink: shouldShrink)
 
+        if windowDriftActive, rule == nil {
+            clearHoldProgress()
+            lastTickAt = time
+            return .stillDrifting(rule: .offTaskWindow)
+        }
+
         if let until = cooldownUntil, time < until {
-            if currentlyDrifting, let rule {
-                activeDriftRule = rule
+            if currentlyDrifting {
+                if let rule {
+                    activeDriftRule = rule
+                }
                 clearHoldProgress()
                 lastTickAt = time
-                return .stillDrifting(rule: rule)
+                return .stillDrifting(rule: activeDriftRule ?? rule ?? .offTaskWindow)
             }
             // Still in cooldown and not drifting: hold does not accumulate.
             resetHold()
@@ -245,19 +256,41 @@ public struct DriftEngine: Equatable, Sendable {
         return .none
     }
 
-    /// Force a window-title drift (no hold — Gemini already judged off-task).
+    /// Mark the front window as off-task. Shrink continues until `clearWindowDrift()`.
+    /// Returns `.fire` only when this should count as a new drift event.
     public mutating func fireWindowDrift(at time: Date) -> Output {
-        if let until = cooldownUntil, time < until {
-            return .none
-        }
+        let alreadyOffTask = currentlyDrifting && activeDriftRule == .offTaskWindow
         currentlyDrifting = true
         activeDriftRule = .offTaskWindow
-        cooldownUntil = time.addingTimeInterval(config.cooldownDuration)
-        applyConfirmedDistraction(severity: 3, duration: 0)
         resetHold()
         clearHoldProgress()
-        lastTickAt = time
+        if lastTickAt == nil { lastTickAt = time }
+
+        // Inside cooldown, or already counted: keep shrinking without a new event.
+        if alreadyOffTask { return .stillDrifting(rule: .offTaskWindow) }
+        if let until = cooldownUntil, time < until {
+            return .stillDrifting(rule: .offTaskWindow)
+        }
+
+        cooldownUntil = time.addingTimeInterval(config.cooldownDuration)
+        applyConfirmedDistraction(severity: 2, duration: 0)
         return .fire(rule: .offTaskWindow, heldFor: 0)
+    }
+
+    /// Call when the front window is judged on-task again.
+    public mutating func clearWindowDrift() {
+        guard activeDriftRule == .offTaskWindow else { return }
+        currentlyDrifting = false
+        activeDriftRule = nil
+        // Let the ball start recovering right away instead of waiting out the cooldown.
+        cooldownUntil = nil
+        resetHold()
+        clearHoldProgress()
+    }
+
+    /// True while an off-task window/tab is keeping the ball shrinking.
+    public var isWindowDriftActive: Bool {
+        currentlyDrifting && activeDriftRule == .offTaskWindow
     }
 
     /// Break length from quiz accuracy + confirmed distraction count.

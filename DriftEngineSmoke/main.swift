@@ -77,19 +77,19 @@ struct DriftEngineSmoke {
             check("cooldown: only one fire", fireCount == 1, "count=\(fireCount)")
         }
 
-        // Default no-face: exact 5s hold, then fire (blinks filtered in HeadTracker)
+        // Default no-face: exact 3s hold, then fire (blinks filtered in HeadTracker)
         do {
             var engine = DriftEngine(config: .default)
             let start = Date(timeIntervalSince1970: 1_000_000)
             var firedAt: TimeInterval?
-            for t in stride(from: 0.0, through: 6.0, by: 0.25) {
+            for t in stride(from: 0.0, through: 4.0, by: 0.25) {
                 if case .fire(let rule, _) = engine.process(reading: reading(at: t, face: false, from: start)) {
                     check("no-face rule", rule == .noFace)
                     firedAt = t
                     break
                 }
             }
-            check("no-face fires at 5s", abs((firedAt ?? -1) - 5.0) < 0.3, "t=\(String(describing: firedAt))")
+            check("no-face fires at 3s", abs((firedAt ?? -1) - 3.0) < 0.3, "t=\(String(describing: firedAt))")
         }
 
         // Continuous distraction empties the ball (red-path prerequisite)
@@ -102,12 +102,12 @@ struct DriftEngineSmoke {
             check("continuous drift empties ball", engine.ballSize <= 0.02, "ball=\(engine.ballSize)")
         }
 
-        // Eyes closed / yawn use the same 5s hold
+        // Eyes closed / yawn use the same 3s hold
         do {
             var engine = DriftEngine(config: .default)
             let start = Date(timeIntervalSince1970: 1_000_000)
             var fired: DriftRule?
-            for t in stride(from: 0.0, through: 5.5, by: 0.25) {
+            for t in stride(from: 0.0, through: 3.5, by: 0.25) {
                 let r = HeadReading(
                     timestamp: start.addingTimeInterval(t),
                     facePresent: true,
@@ -123,7 +123,7 @@ struct DriftEngineSmoke {
             var engine = DriftEngine(config: .default)
             let start = Date(timeIntervalSince1970: 1_000_000)
             var fired: DriftRule?
-            for t in stride(from: 0.0, through: 5.5, by: 0.25) {
+            for t in stride(from: 0.0, through: 3.5, by: 0.25) {
                 let r = HeadReading(
                     timestamp: start.addingTimeInterval(t),
                     facePresent: true,
@@ -156,14 +156,24 @@ struct DriftEngineSmoke {
             check("voice allowed after spacing", engine.shouldSpeak(at: t0.addingTimeInterval(121)))
         }
 
-        // Window drift cooldown
+        // Window drift cooldown + keeps shrinking while face is on-screen
         do {
             var engine = DriftEngine(config: .default)
             let t0 = Date(timeIntervalSince1970: 1_000_000)
             let first = engine.fireWindowDrift(at: t0)
-            let second = engine.fireWindowDrift(at: t0.addingTimeInterval(2))
+            let afterFire = engine.ballSize
             check("window drift fires", first == .fire(rule: .offTaskWindow, heldFor: 0))
-            check("window drift respects cooldown", second == .none)
+            // Looking at screen must NOT clear an off-task tab shrink.
+            for t in stride(from: 0.5, through: 4.0, by: 0.5) {
+                _ = engine.process(reading: reading(at: t, from: t0))
+            }
+            check("window drift keeps shrinking on-screen", engine.ballSize < afterFire, "ball=\(engine.ballSize) afterFire=\(afterFire)")
+            engine.clearWindowDrift()
+            let afterClear = engine.ballSize
+            for t in stride(from: 4.5, through: 8.0, by: 0.5) {
+                _ = engine.process(reading: reading(at: t, from: t0))
+            }
+            check("cleared window drift can recover", engine.ballSize >= afterClear - 0.001)
         }
 
         // After fire, looking at screen during cooldown must recover (not keep shrinking)

@@ -26,6 +26,9 @@ struct AbsortoApp: App {
                         panelBridge.sync(visible: true, controller: controller)
                     }
                 }
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    controller.refreshAccessibilityPermission()
+                }
         }
         .defaultSize(width: 560, height: 700)
         .windowResizability(.contentSize)

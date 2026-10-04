@@ -78,7 +78,10 @@ struct IdleView: View {
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.5))
 
-            SessionCrownView(selectedMinutes: $controller.selectedSessionMinutes)
+            SessionCrownView(
+                selectedMinutes: $controller.selectedSessionMinutes,
+                onTick: { controller.audio.playCrownTick() }
+            )
                 .padding(.vertical, 2)
 
             Text("Vision tracks focus on-device. Gemini checks tabs and builds your quiz from a photo you drag in.")
@@ -315,6 +318,32 @@ struct StudyingView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.white.opacity(0.35))
 
+            if !controller.windows.canReadWindowTitles {
+                VStack(spacing: 8) {
+                    Text("App names are detected. For browser *tab* titles, allow Absorto under Accessibility (and Automation when macOS asks).")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.orange.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 380)
+                    HStack(spacing: 14) {
+                        Button("Grant access…") {
+                            controller.requestAccessibilityAccess()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+
+                        Button("Open Settings") {
+                            controller.windows.openAccessibilitySettings()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.55))
+                    }
+                }
+                .padding(.top, 4)
+            }
+
             Button("End session") {
                 controller.endSessionEarly()
             }
@@ -523,7 +552,7 @@ struct BreakStartingView: View {
                 .font(.system(size: 13))
                 .foregroundStyle(.white.opacity(0.55))
 
-            PenaltyListView(controller: controller)
+            PenaltyListView(controller: controller, creditAsCheckmark: true)
                 .padding(.top, 8)
         }
         .padding(32)
@@ -566,7 +595,7 @@ struct BreakTimerView: View {
                         .frame(maxWidth: 380)
                 }
 
-                PenaltyListView(controller: controller)
+                PenaltyListView(controller: controller, creditAsCheckmark: true)
 
                 Text("When this hits zero, the next session starts automatically.")
                     .font(.system(size: 12))
@@ -603,18 +632,27 @@ struct BreakTimerView: View {
 
 private struct PenaltyListView: View {
     @ObservedObject var controller: SessionController
+    /// Credit lines show a checkmark instead of green “0 min withdrawn” copy.
+    var creditAsCheckmark: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(controller.breakPenaltyLines) { line in
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center, spacing: 10) {
                     Text(line.title)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(line.isCredit ? Color.green.opacity(0.9) : Color.red.opacity(0.9))
+                        .foregroundStyle(line.isCredit ? Color.white.opacity(0.75) : Color.red.opacity(0.9))
                     Spacer(minLength: 12)
-                    Text(line.detail)
-                        .font(.system(size: 12))
-                        .foregroundStyle(line.isCredit ? Color.green.opacity(0.85) : Color.red.opacity(0.85))
+                    if line.isCredit, creditAsCheckmark {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.green.opacity(0.9))
+                            .accessibilityLabel("Correct")
+                    } else {
+                        Text(line.detail)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.red.opacity(0.85))
+                    }
                 }
             }
         }

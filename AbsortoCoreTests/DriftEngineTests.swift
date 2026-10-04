@@ -67,12 +67,12 @@ final class DriftEngineTests: XCTestCase {
         XCTAssertEqual(fireCount, 1, "cooldown should suppress a second Gemini trigger")
     }
 
-    func testNoFaceFiresAtExactlyFiveSeconds() {
+    func testNoFaceFiresAtExactlyThreeSeconds() {
         var engine = DriftEngine(config: .default)
         let start = Date(timeIntervalSince1970: 1_000_000)
         var firedAt: TimeInterval?
 
-        for t in stride(from: 0.0, through: 6.0, by: 0.25) {
+        for t in stride(from: 0.0, through: 4.0, by: 0.25) {
             if case .fire(let rule, _) = engine.process(reading: reading(at: t, face: false, from: start)) {
                 XCTAssertEqual(rule, .noFace)
                 firedAt = t
@@ -82,7 +82,7 @@ final class DriftEngineTests: XCTestCase {
             XCTAssertEqual(engine.ballSize, 1.0, accuracy: 0.001, "t=\(t)")
         }
 
-        XCTAssertEqual(firedAt ?? -1, 5.0, accuracy: 0.26)
+        XCTAssertEqual(firedAt ?? -1, 3.0, accuracy: 0.26)
     }
 
     func testContinuousDistractionEmptiesBall() {
@@ -101,7 +101,7 @@ final class DriftEngineTests: XCTestCase {
         let start = Date(timeIntervalSince1970: 1_000_000)
         var fired: DriftRule?
 
-        for t in stride(from: 0.0, through: 5.5, by: 0.25) {
+        for t in stride(from: 0.0, through: 3.5, by: 0.25) {
             let r = HeadReading(
                 timestamp: start.addingTimeInterval(t),
                 facePresent: true,
@@ -122,7 +122,7 @@ final class DriftEngineTests: XCTestCase {
         let start = Date(timeIntervalSince1970: 1_000_000)
         var fired: DriftRule?
 
-        for t in stride(from: 0.0, through: 5.5, by: 0.25) {
+        for t in stride(from: 0.0, through: 3.5, by: 0.25) {
             let r = HeadReading(
                 timestamp: start.addingTimeInterval(t),
                 facePresent: true,

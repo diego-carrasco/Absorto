@@ -63,11 +63,14 @@ final class SessionController: ObservableObject {
     private let calibrateSeconds = 10
     private let breakStartDelaySeconds = 5
     private let crisisHoldSeconds: TimeInterval = 5
+    /// Window key with a Gemini tab check in flight.
+    private var pendingTabCheckKey: String?
     private var warningHoldStartedAt: Date?
     private var lastCrisisTickAt: Date?
     /// Wall-clock pause support for the study timer.
     private var studyElapsedBeforePause: TimeInterval = 0
     private var studySegmentStartedAt: Date?
+    private var lastCountdownSecondPlayed: Int?
 
     var ballSize: Double {
         isWarningBall || phase == .attentionLost ? warningBallSize : engine.ballSize
@@ -114,6 +117,7 @@ final class SessionController: ObservableObject {
 
         errorMessage = nil
         breakTask?.cancel()
+        audio.stopElevatorMusic()
         declaredTopic = topic
         engine = DriftEngine(config: .default)
         drifts = []
@@ -259,31 +263,46 @@ final class SessionController: ObservableObject {
             self.updateCrisisBall(at: time, reading: reading)
         }
 
-        windows.start { [weak self] app, title in
+        windows.start { [weak self] front in
             guard let self, self.phase == .studying else { return }
-            Task { await self.handleNewWindowTitle(app: app, title: title) }
+            self.evaluateFrontWindow(front)
         }
     }
 
     private func startTimer() {
         timerTask?.cancel()
         studySegmentStartedAt = Date()
+        lastCountdownSecondPlayed = nil
         let duration = effectiveDuration
         timerTask = Task {
             while !Task.isCancelled {
-                guard phase == .studying else {
+                // Pause the study clock while the red warning ball is up.
+                guard phase == .studying, !isWarningBall else {
                     try? await Task.sleep(nanoseconds: 250_000_000)
                     continue
                 }
                 let segment = studySegmentStartedAt.map { Date().timeIntervalSince($0) } ?? 0
                 let elapsed = studyElapsedBeforePause + max(0, segment)
                 timerProgress = min(1, elapsed / duration)
+                let remaining = max(0, duration - elapsed)
+                playSessionCountdownIfNeeded(remaining: remaining)
                 if elapsed >= duration {
                     await endSession()
                     return
                 }
                 try? await Task.sleep(nanoseconds: 250_000_000)
             }
+        }
+    }
+
+    private func playSessionCountdownIfNeeded(remaining: TimeInterval) {
+        let sec = Int(ceil(remaining))
+        guard sec >= 1, sec <= 5 else { return }
+        guard lastCountdownSecondPlayed != sec else { return }
+        lastCountdownSecondPlayed = sec
+        audio.playCountdownTick(secondsRemaining: sec)
+        if !isWarningBall {
+            statusText = "Session ending in \(sec)…"
         }
     }
 
@@ -320,12 +339,21 @@ final class SessionController: ObservableObject {
 
         let whiteGone = engine.ballSize <= 0.02
 
-        if whiteGone && distracted {
+        // Off-task tabs count as distracted even when the face faces the screen.
+        let tabDistracted = engine.isWindowDriftActive
+
+        if whiteGone && (distracted || tabDistracted) {
             if !isWarningBall {
                 isWarningBall = true
                 warningBallSize = 0
                 warningHoldStartedAt = nil
                 statusText = "Focus gone — come back"
+                audio.playWarningRise()
+                // Freeze the study timer while red is up.
+                if let started = studySegmentStartedAt {
+                    studyElapsedBeforePause += Date().timeIntervalSince(started)
+                }
+                studySegmentStartedAt = nil
             }
 
             // Stepped red grow (~3s + 2s + 1.5s ≈ 6.5s) — still time to come back.
@@ -341,11 +369,12 @@ final class SessionController: ObservableObject {
                     enterAttentionLost()
                 }
             }
-        } else if isWarningBall && !distracted {
-            // User returned before the pause — clear red and let white recover.
+        } else if isWarningBall && !distracted && !tabDistracted {
+            // User returned before the pause — clear red, resume timer, recover white.
             clearCrisisState()
             mutateEngine { $0.restoreFocusBall(to: 0.4) }
             session?.ballSize = engine.ballSize
+            studySegmentStartedAt = Date()
             statusText = "Back on track"
         }
     }
@@ -365,7 +394,7 @@ final class SessionController: ObservableObject {
         camera.stop()
         phase = .attentionLost
         statusText = "Session paused — attention lost"
-        audio.speakFocusNudge(topic: session?.topic ?? declaredTopic)
+        audio.playSessionHalted()
     }
 
     /// Resume after the red-ball pause.
@@ -646,6 +675,7 @@ final class SessionController: ObservableObject {
         showFloatingBall = false
         camera.stop()
         windows.stop()
+        audio.startElevatorMusic()
 
         breakTask?.cancel()
         breakTask = Task {
@@ -654,6 +684,7 @@ final class SessionController: ObservableObject {
                 if Task.isCancelled { return }
                 breakSecondsRemaining -= 1
             }
+            audio.stopElevatorMusic()
             if autoContinueAfterBreak {
                 statusText = "Break over — starting next session"
                 startSession()
@@ -666,11 +697,13 @@ final class SessionController: ObservableObject {
 
     func skipBreakAndContinue() {
         breakTask?.cancel()
+        audio.stopElevatorMusic()
         startSession()
     }
 
     func endBreakToIdle() {
         breakTask?.cancel()
+        audio.stopElevatorMusic()
         phase = .idle
         statusText = "Ready"
     }
@@ -679,6 +712,7 @@ final class SessionController: ObservableObject {
         timerTask?.cancel()
         calibrationTask?.cancel()
         breakTask?.cancel()
+        audio.stopElevatorMusic()
         camera.stop()
         windows.stop()
         showFloatingBall = false
@@ -725,10 +759,9 @@ final class SessionController: ObservableObject {
         lastNudge = event.nudgeText ?? ""
         drifts.append(event)
         statusText = "Distracted — focus ball shrinking"
-        // Chime is immediate; voice is rate-limited so it does not feel like a network wait.
+        // UI sound only (chime already played) — no spoken narrator.
         if engine.shouldSpeak(at: Date()) {
             mutateEngine { $0.markVoiceSpoken(at: Date()) }
-            audio.speakFocusNudge(topic: session?.topic ?? declaredTopic)
         }
     }
 
@@ -743,90 +776,139 @@ final class SessionController: ObservableObject {
         }
     }
 
-    private func handleNewWindowTitle(app: String, title: String) async {
+    // MARK: - Tab / window state
+
+    /// Called on every watcher tick with the *current* front window.
+    /// State-based so returning to an on-task tab stops the shrink immediately.
+    private func evaluateFrontWindow(_ front: FrontWindowSnapshot) {
+        guard phase == .studying else { return }
+        // Looking at Absorto itself is neutral — keep whatever state we had.
+        if front.isSelf { return }
+
         let topic = session?.topic ?? declaredTopic
-        let key = "\(app)|\(title)".lowercased()
-        let lowered = title.lowercased()
-        if lowered.isEmpty { return }
+        let key = front.cacheKey
 
-        do {
-            let judgment: GeminiClient.WindowJudgment
-            if let cached = titleCacheAnswers[key] {
-                judgment = cached
-            } else {
-                let local = localWindowJudgment(app: app, title: title, topic: topic)
-                if local.onTask == "no" || local.onTask == "yes" {
-                    judgment = local
-                    titleCacheAnswers[key] = judgment
-                } else {
-                    // Unsure titles: Gemini only for tabs — never for head pose.
-                    // Skip while recovering from a Vision drift, or if we just asked Gemini.
-                    let now = Date()
-                    let configured = await gemini.isConfigured
-                    let rateLimited = await gemini.isRateLimited
-                    let allowGemini = now >= suppressTabGeminiUntil
-                        && now.timeIntervalSince(lastTabGeminiAt) >= tabGeminiMinSpacing
-                        && configured
-                        && !rateLimited
+        if let cached = titleCacheAnswers[key] {
+            applyTabVerdict(cached, front: front, topic: topic)
+            return
+        }
 
-                    if allowGemini {
-                        lastTabGeminiAt = now
-                        statusText = "Tab check (Gemini)…"
-                        judgment = try await gemini.checkWindowTitle(appName: app, windowTitle: title, topic: topic)
-                        titleCacheAnswers[key] = judgment
-                        if phase == .studying {
-                            statusText = "Focusing on: \(topic)"
-                        }
-                    } else {
-                        if await gemini.isConfigured, await gemini.isRateLimited {
-                            applyGeminiBadge(
-                                detail: "Gemini rate-limited — using offline fallback",
-                                badge: "Gemini limited",
-                                online: false
-                            )
-                        }
-                        // Treat unresolved titles as on-task to avoid false positives / delay.
-                        judgment = .init(onTask: "unsure", reason: "Local only — Gemini deferred.")
-                        titleCacheAnswers[key] = judgment
-                    }
-                }
-            }
+        let local = localWindowJudgment(
+            app: front.appName,
+            title: front.title,
+            topic: topic,
+            bundleID: front.bundleID
+        )
+        if local.onTask != "unsure" {
+            titleCacheAnswers[key] = local
+            applyTabVerdict(local, front: front, topic: topic)
+            return
+        }
 
-            guard judgment.onTask == "no" else { return }
+        // Unknown title: assume on-task (no false shrink) and ask Gemini once.
+        applyTabVerdict(local, front: front, topic: topic)
+        requestGeminiTabCheck(key: key, front: front, topic: topic)
+    }
 
+    private func applyTabVerdict(
+        _ judgment: GeminiClient.WindowJudgment,
+        front: FrontWindowSnapshot,
+        topic: String
+    ) {
+        if judgment.onTask == "no" {
             let now = Date()
-            var fired = false
+            var firedNewEvent = false
             mutateEngine { eng in
-                if case .fire = eng.fireWindowDrift(at: now) {
-                    fired = true
-                }
-            }
-            guard fired else { return }
-
-            audio.playChime()
-            var event = DriftEvent(
-                sessionId: session?.id ?? UUID(),
-                time: now,
-                source: .window,
-                rule: .offTaskWindow,
-                category: .lookingElsewhere,
-                severity: 3,
-                studying: topic,
-                nudgeText: "Off-task tab: \(title). \(judgment.reason)"
-            )
-            lastNudge = event.nudgeText ?? ""
-            drifts.append(event)
-            statusText = "Tab (Gemini/local): off-task"
-
-            if engine.shouldSpeak(at: now) {
-                mutateEngine { $0.markVoiceSpoken(at: now) }
-                audio.speakFocusNudge(topic: topic)
+                if case .fire = eng.fireWindowDrift(at: now) { firedNewEvent = true }
             }
             session?.ballSize = engine.ballSize
-        } catch {
-            noteGeminiFallback(error)
-            titleCacheAnswers[key] = .init(onTask: "unsure", reason: "Deferred while Gemini is limited.")
+
+            if firedNewEvent {
+                audio.playChime()
+                let label = front.titleIsReal ? front.title : front.appName
+                var event = DriftEvent(
+                    sessionId: session?.id ?? UUID(),
+                    time: now,
+                    source: .window,
+                    rule: .offTaskWindow,
+                    category: .lookingElsewhere,
+                    severity: 3,
+                    studying: topic,
+                    nudgeText: "Off-task: \(label). \(judgment.reason)"
+                )
+                lastNudge = event.nudgeText ?? ""
+                drifts.append(event)
+                if engine.shouldSpeak(at: now) {
+                    mutateEngine { $0.markVoiceSpoken(at: now) }
+                }
+            }
+            if !isWarningBall {
+                let label = front.titleIsReal ? front.title : front.appName
+                statusText = "Off-task: \(label) — ball shrinking"
+            }
+            return
         }
+
+        // On-task (or unknown): stop any tab-driven shrink.
+        guard engine.isWindowDriftActive else { return }
+        mutateEngine { $0.clearWindowDrift() }
+        session?.ballSize = engine.ballSize
+        lastNudge = ""
+        if !isWarningBall {
+            statusText = "Back on task — focusing on: \(topic)"
+        }
+    }
+
+    private func requestGeminiTabCheck(key: String, front: FrontWindowSnapshot, topic: String) {
+        // One in-flight check at a time, spaced so free-tier quota is not burned.
+        guard pendingTabCheckKey != key else { return }
+        let now = Date()
+        guard now >= suppressTabGeminiUntil,
+              now.timeIntervalSince(lastTabGeminiAt) >= tabGeminiMinSpacing else { return }
+
+        pendingTabCheckKey = key
+        Task {
+            defer { if pendingTabCheckKey == key { pendingTabCheckKey = nil } }
+            guard await gemini.isConfigured else { return }
+            if await gemini.isRateLimited {
+                applyGeminiBadge(
+                    detail: "Gemini rate-limited — using offline fallback",
+                    badge: "Gemini limited",
+                    online: false
+                )
+                return
+            }
+
+            lastTabGeminiAt = Date()
+            do {
+                let judgment = try await gemini.checkWindowTitle(
+                    appName: front.appName,
+                    windowTitle: front.title,
+                    topic: topic
+                )
+                titleCacheAnswers[key] = judgment
+                applyGeminiBadge(
+                    detail: "Gemini online (\(AppConfig.geminiModel))",
+                    badge: "Gemini online",
+                    online: true
+                )
+                // Only act if the user is still on that same window.
+                if phase == .studying, windows.currentKey == key {
+                    applyTabVerdict(judgment, front: front, topic: topic)
+                }
+            } catch {
+                noteGeminiFallback(error)
+            }
+        }
+    }
+
+    /// Silent re-check after the user flips Accessibility / Automation in System Settings.
+    func refreshAccessibilityPermission() {
+        windows.refreshAccessibilityTrust()
+    }
+
+    func requestAccessibilityAccess() {
+        windows.requestAccessibilityPrompt()
     }
 
     // MARK: - Local helpers
@@ -902,7 +984,24 @@ final class SessionController: ObservableObject {
         )
     }
 
-    private func localWindowJudgment(app: String, title: String, topic: String) -> GeminiClient.WindowJudgment {
+    private func localWindowJudgment(
+        app: String,
+        title: String,
+        topic: String,
+        bundleID: String = ""
+    ) -> GeminiClient.WindowJudgment {
+        // Known entertainment apps are caught by bundle id — needs no permission at all.
+        let offBundles = [
+            "com.spotify.client", "com.hnc.Discord", "com.apple.Music", "com.apple.TV",
+            "com.netflix.Netflix", "com.valvesoftware.steam", "tv.twitch",
+            "com.apple.iChat", "com.apple.MobileSMS", "net.whatsapp.WhatsApp",
+            "com.tinyspeck.slackmacgap", "com.facebook.archon"
+        ]
+        let bid = bundleID.lowercased()
+        if offBundles.contains(where: { bid == $0.lowercased() }) {
+            return .init(onTask: "no", reason: "\(app) is not study material.")
+        }
+
         let t = (title + " " + app).lowercased()
         let offKeywords = [
             "youtube", "tiktok", "reddit", "twitter", "x.com", "instagram", "netflix",
@@ -910,7 +1009,7 @@ final class SessionController: ObservableObject {
             "steam", "discord", "spotify", "imessage", "messages", "whatsapp"
         ]
         if offKeywords.contains(where: { t.contains($0) }) {
-            return .init(onTask: "no", reason: "Title looks recreational.")
+            return .init(onTask: "no", reason: "Looks recreational.")
         }
         let tokens = topic.lowercased()
             .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
